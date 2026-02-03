@@ -84,6 +84,26 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Visit http://localhost:8000/ui
 
+## Docker Deployment
+
+For easy deployment with Docker Compose:
+
+```bash
+# Quick deployment (requires .env file)
+./deploy.sh
+
+# Or manually
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed Docker deployment instructions.
+
 ## Project Structure
 
 ```
@@ -159,6 +179,10 @@ case-to-clearance/
 ├── .env.example                # Environment template
 ├── .env                        # Your credentials (not in git)
 ├── pyproject.toml              # Dependencies
+├── requirements.txt            # Python requirements
+├── Dockerfile                  # Docker image
+├── docker-compose.yml          # Docker Compose configuration
+├── deploy.sh                   # Quick deployment script
 ├── plan.md                     # Implementation plan
 └── README.md                   # This file
 ```
@@ -359,13 +383,25 @@ mypy app/
 
 ## Production Deployment
 
+### Docker Compose (Recommended)
+
+```bash
+# Quick deployment
+./deploy.sh
+
+# Or manually
+docker-compose up -d
+
+# With Nginx reverse proxy
+docker-compose --profile with-nginx up -d
+```
+
+### Traditional Deployment
+
 ```bash
 # Using gunicorn
+pip install gunicorn uvicorn[standard]
 gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-
-# Using Docker
-docker build -t case-to-clearance .
-docker run -p 8000:8000 --env-file .env case-to-clearance
 ```
 
 ## License
