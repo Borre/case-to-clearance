@@ -223,9 +223,11 @@
         },
 
         formatMessage(content) {
-            // Simple markdown-like formatting
+            // Simple markdown-like formatting for **bold** text
+            // Use RegExp constructor to avoid regex literal parsing issues
+            const boldRegex = new RegExp('\\*\\*(.+?)\\*\\*', 'g');
             return content
-                .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
+                .replace(boldRegex, '<strong>$1</strong>')
                 .replace(/\n/g, '<br>');
         },
 
