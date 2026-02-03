@@ -223,9 +223,9 @@
         },
 
         formatMessage(content) {
-            // Simple markdown-like formatting - convert newlines to breaks
-            // Note: bold formatting disabled to avoid regex escaping issues
-            return content.replace(/\n/g, '<br>');
+            // Simple formatting - convert newlines to breaks
+            // Use split/join instead of regex to avoid FastAPI escaping issues
+            return content.split('\n').join('<br>');
         },
 
         updateProcedureInfo(procedure) {
