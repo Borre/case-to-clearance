@@ -225,7 +225,7 @@
         formatMessage(content) {
             // Simple markdown-like formatting
             return content
-                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
                 .replace(/\n/g, '<br>');
         },
 
