@@ -1,0 +1,38 @@
+{
+  "agencies": [
+    {
+      "id": "sunat",
+      "name": "SUNAT",
+      "full_name": "Superintendencia Nacional de Aduanas y de Administración Tributaria",
+      "country": "PE",
+      "description": "Peruvian customs and tax authority"
+    },
+    {
+      "id": "dian",
+      "name": "DIAN",
+      "full_name": "Dirección de Impuestos y Aduanas Nacionales",
+      "country": "CO",
+      "description": "Colombian customs and tax authority"
+    },
+    {
+      "id": "sat",
+      "name": "SAT",
+      "full_name": "Superintendencia de Administración Tributaria",
+      "country": "GT",
+      "description": "Guatemalan tax authority"
+    }
+  ],
+  "document_type_mapping": {
+    "commercial_invoice": ["invoice", "factura", "commercial invoice"],
+    "bill_of_lading": ["bl", "bill of lading", "conocimiento de embarque", "b/l"],
+    "packing_list": ["packing", "packing list", "lista de empaque"],
+    "customs_declaration": ["declaration", "customs declaration", "declaración de aduana"],
+    "export_declaration": ["export declaration", "declaración de exportación"],
+    "temporary_admission_permit": ["permit", "temporary admission", "admisión temporal"],
+    "original_export_declaration": ["original export", "exportación original"],
+    "affidavit_of_return": ["affidavit", "declaración jurada"],
+    "certificate_of_origin": ["certificate of origin", "certificado de origen"],
+    "insurance_certificate": ["insurance", "seguro"],
+    "guarantee_certificate": ["guarantee", "garantía"]
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "import-regular": {
+    "required": [
+      {
+        "doc_type": "commercial_invoice",
+        "description": "Commercial Invoice (Factura Comercial)",
+        "optional": false
+      },
+      {
+        "doc_type": "bill_of_lading",
+        "description": "Bill of Lading (Conocimiento de Embarque)",
+        "optional": false
+      },
+      {
+        "doc_type": "packing_list",
+        "description": "Packing List (Lista de Empaque)",
+        "optional": false
+      },
+      {
+        "doc_type": "customs_declaration",
+        "description": "Customs Declaration (Declaración de Aduana)",
+        "optional": false
+      }
+    ],
+    "optional": [
+      {
+        "doc_type": "certificate_of_origin",
+        "description": "Certificate of Origin (Certificado de Origen)",
+        "optional": true
+      },
+      {
+        "doc_type": "insurance_certificate",
+        "description": "Insurance Certificate (Certificado de Seguro)",
+        "optional": true
+      }
+    ]
+  },
+  "import-temporary": {
+    "required": [
+      {
+        "doc_type": "commercial_invoice",
+        "description": "Commercial Invoice (Factura Comercial)",
+        "optional": false
+      },
+      {
+        "doc_type": "bill_of_lading",
+        "description": "Bill of Lading (Conocimiento de Embarque)",
+        "optional": false
+      },
+      {
+        "doc_type": "temporary_admission_permit",
+        "description": "Temporary Admission Permit (Permiso de Admisión Temporal)",
+        "optional": false
+      },
+      {
+        "doc_type": "customs_declaration",
+        "description": "Customs Declaration (Declaración de Aduana)",
+        "optional": false
+      }
+    ],
+    "optional": [
+      {
+        "doc_type": "guarantee_certificate",
+        "description": "Guarantee Certificate (Certificado de Garantía)",
+        "optional": true
+      }
+    ]
+  },
+  "export": {
+    "required": [
+      {
+        "doc_type": "commercial_invoice",
+        "description": "Commercial Invoice (Factura Comercial)",
+        "optional": false
+      },
+      {
+        "doc_type": "bill_of_lading",
+        "description": "Bill of Lading (Conocimiento de Embarque)",
+        "optional": false
+      },
+      {
+        "doc_type": "packing_list",
+        "description": "Packing List (Lista de Empaque)",
+        "optional": false
+      },
+      {
+        "doc_type": "export_declaration",
+        "description": "Export Declaration (Declaración de Exportación)",
+        "optional": false
+      }
+    ],
+    "optional": [
+      {
+        "doc_type": "certificate_of_origin",
+        "description": "Certificate of Origin (Certificado de Origen)",
+        "optional": true
+      }
+    ]
+  },
+  "reimport": {
+    "required": [
+      {
+        "doc_type": "original_export_declaration",
+        "description": "Original Export Declaration (Declaración de Exportación Original)",
+        "optional": false
+      },
+      {
+        "doc_type": "bill_of_lading",
+        "description": "Bill of Lading (Conocimiento de Embarque)",
+        "optional": false
+      },
+      {
+        "doc_type": "customs_declaration",
+        "description": "Customs Declaration (Declaración de Aduana)",
+        "optional": false
+      },
+      {
+        "doc_type": "affidavit_of_return",
+        "description": "Affidavit of Return (Declaración Jurada de Retorno)",
+        "optional": false
+      }
+    ],
+    "optional": []
+  }
+}

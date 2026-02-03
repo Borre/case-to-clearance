@@ -1,0 +1,46 @@
+CUSTOMS DECLARATION
+===================
+
+Declaration Number: DUA-2024-456789
+Date of Filing: 25 November 2024
+
+Declarant:
+Importadora Global SAC
+RUC: 20123456789
+Av. Republica de Panama 1234
+Lima, Peru
+
+Procedure: Regular Import (Importacion Regular)
+
+Customs Post: Callao
+Warehouse: Terminal de Contenedores del Callao
+
+Shipment Information:
+====================
+Shipment Reference: CN-2024-12345
+Bill of Lading: CN-2024-12345
+Vessel: Pacific Star (V-089)
+Port of Loading: Shenzhen, China
+Port of Discharge: Callao, Peru
+
+Goods Description:
+==================
+Computer equipment - Laptops and monitors
+HS Code: 8471.30.00.00 (50 units)
+HS Code: 8471.60.00.00 (100 units)
+Country of Origin: China
+
+Valuation:
+==========
+Declared Value: $50,000.00 USD
+Currency: United States Dollar
+FOB Value: $50,000.00 USD
+Freight: $3,000.00 USD
+Insurance: $500.00 USD
+CIF Value: $53,500.00 USD
+
+Taxes:
+========
+Ad Valorem Duty: 6%
+IGV (VAT): 18%
+Total Tax Payable: $12,720.00 USD

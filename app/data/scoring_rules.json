@@ -1,0 +1,77 @@
+{
+  "rules": [
+    {
+      "id": "invoice_total_declared_mismatch",
+      "points": 25,
+      "severity": "HIGH",
+      "description": "Invoice total differs from declared value by more than 10%",
+      "threshold": 0.10
+    },
+    {
+      "id": "shipment_id_inconsistency",
+      "points": 20,
+      "severity": "HIGH",
+      "description": "Shipment IDs are inconsistent across documents"
+    },
+    {
+      "id": "date_sequence_violation",
+      "points": 10,
+      "severity": "MEDIUM",
+      "description": "Document dates violate logical sequence (invoice < BL < declaration)"
+    },
+    {
+      "id": "missing_required_doc",
+      "points": 15,
+      "severity": "MEDIUM",
+      "description": "A required document for the procedure is missing"
+    },
+    {
+      "id": "currency_mismatch",
+      "points": 10,
+      "severity": "MEDIUM",
+      "description": "Multiple currencies present without conversion explanation"
+    },
+    {
+      "id": "prior_flag_present",
+      "points": 30,
+      "severity": "CRITICAL",
+      "description": "Entity has prior compliance flags"
+    },
+    {
+      "id": "hs_code_mismatch",
+      "points": 15,
+      "severity": "MEDIUM",
+      "description": "HS code mismatch between documents"
+    },
+    {
+      "id": "value_anomaly_low",
+      "points": 10,
+      "severity": "MEDIUM",
+      "description": "Declared value significantly below typical range for HS code"
+    },
+    {
+      "id": "value_anomaly_high",
+      "points": 20,
+      "severity": "HIGH",
+      "description": "Declared value significantly above typical range for HS code"
+    },
+    {
+      "id": "new_entity",
+      "points": 5,
+      "severity": "INFO",
+      "description": "Entity has no prior import/export history"
+    }
+  ],
+  "thresholds": {
+    "low": 25,
+    "medium": 50,
+    "high": 75,
+    "critical": 90
+  },
+  "level_colors": {
+    "LOW": "#22c55e",
+    "MEDIUM": "#eab308",
+    "HIGH": "#f97316",
+    "CRITICAL": "#ef4444"
+  }
+}

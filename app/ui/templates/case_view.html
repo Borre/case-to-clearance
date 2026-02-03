@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Case {{ case_id }} - Case-to-Clearance{% endblock %}
+
+{% block content %}
+<div class="case-view">
+    <!-- Case Header -->
+    <div class="case-header">
+        <div class="case-info">
+            <h2>Case: {{ case_id }}</h2>
+            <span class="status-badge status-pending">In Progress</span>
+        </div>
+        <div class="case-meta">
+            <span>Created: {{ case.created_at[:19] if case.created_at else 'N/A' }}</span>
+            <span>Updated: {{ case.updated_at[:19] if case.updated_at else 'N/A' }}</span>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="citizen" role="tab">
+            <span class="tab-icon">💬</span>
+            Citizen
+        </button>
+        <button class="tab-btn" data-tab="documents" role="tab">
+            <span class="tab-icon">📄</span>
+            Documents
+        </button>
+        <button class="tab-btn" data-tab="risk" role="tab">
+            <span class="tab-icon">📊</span>
+            Risk
+        </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Citizen Tab -->
+        <div id="tab-citizen" class="tab-pane active">
+            <div class="citizen-tab">
+                <!-- Procedure Info -->
+                <div class="procedure-card">
+                    <h3>Procedure</h3>
+                    {% if case.procedure %}
+                    <div class="procedure-info">
+                        <p><strong>{{ case.procedure.name }}</strong></p>
+                        <p>Confidence: {{ "%.0f%%"|format(case.procedure.confidence * 100) }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Procedure not yet identified. Start chatting below.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Chat Interface -->
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        {% if case.citizen_intake.messages %}
+                        {% for msg in case.citizen_intake.messages %}
+                        <div class="message message-{{ msg.role }}">
+                            <div class="message-content">
+                                {{ msg.content }}
+                            </div>
+                            <div class="message-time">{{ msg.timestamp[:19] if msg.timestamp else '' }}</div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="message message-system">
+                            <div class="message-content">
+                                Welcome! Please describe your customs clearance request. For example:
+                                <blockquote>"I want to import electronics from China and need to clear customs."</blockquote>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <form class="chat-form" hx-post="/api/case/{{ case_id }}/chat" hx-target="#chat-messages" hx-swap="innerHTML">
+                        <input type="text" name="message" class="chat-input" placeholder="Type your message..." required autofocus>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </form>
+                </div>
+
+                <!-- Collected Fields -->
+                <div class="fields-card">
+                    <h3>Collected Information</h3>
+                    {% if case.citizen_intake.collected_fields %}
+                    <dl class="fields-list">
+                        {% for key, value in case.citizen_intake.collected_fields.items() %}
+                        <dt>{{ key }}</dt>
+                        <dd>{{ value }}</dd>
+                        {% endfor %}
+                    </dl>
+                    {% else %}
+                    <p class="text-muted">No information collected yet.</p>
+                    {% endif %}
+
+                    {% if case.citizen_intake.missing_fields %}
+                    <div class="missing-fields">
+                        <h4>Still needed:</h4>
+                        <ul>
+                            {% for field in case.citizen_intake.missing_fields %}
+                            <li>{{ field }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents Tab -->
+        <div id="tab-documents" class="tab-pane">
+            <div class="documents-tab">
+                <!-- Upload Section -->
+                <div class="upload-card">
+                    <h3>Upload Documents</h3>
+                    <form class="upload-form" hx-post="/api/case/{{ case_id }}/docs/upload" hx-encoding="multipart/form-data" hx-target="#docs-list" hx-swap="outerHTML">
+                        <input type="file" name="files" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff" class="file-input">
+                        <button type="submit" class="btn btn-primary">Upload Files</button>
+                    </form>
+                    <p class="help-text">Accepted formats: PDF, PNG, JPG, JPEG, TIFF</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="doc-actions">
+                    <button class="btn btn-secondary" hx-post="/api/case/{{ case_id }}/docs/run_ocr" hx-indicator="#ocr-indicator">
+                        <span class="btn-icon">🔍</span> Run OCR
+                    </button>
+                    <button class="btn btn-secondary" hx-post="/api/case/{{ case_id }}/docs/extract_validate" hx-indicator="#extract-indicator">
+                        <span class="btn-icon">⚡</span> Extract & Validate
+                    </button>
+                    <span id="ocr-indicator" class="htmx-indicator">Processing...</span>
+                    <span id="extract-indicator" class="htmx-indicator">Processing...</span>
+                </div>
+
+                <!-- Documents List -->
+                <div id="docs-list">
+                    {% if case.documents.files %}
+                    <div class="docs-list">
+                        <h4>Uploaded Documents ({{ case.documents.files|length }})</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Filename</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in case.documents.files %}
+                                <tr>
+                                    <td>{{ file.filename }}</td>
+                                    <td>{{ file.mime }}</td>
+                                    <td>{{ "%.1f KB"|format(file.size / 1024) }}</td>
+                                    <td><span class="badge badge-info">Uploaded</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    {% if case.documents.extractions %}
+                    <div class="extractions-list">
+                        <h4>Extracted Data</h4>
+                        {% for ext in case.documents.extractions %}
+                        <div class="extraction-card">
+                            <h5>{{ ext.doc_type|replace('_', ' ')|title }} ({{ "%.0f%%"|format(ext.confidence * 100) }})</h5>
+                            <dl class="fields-list compact">
+                                {% for key, value in ext.fields.items() %}
+                                <dt>{{ key }}</dt>
+                                <dd>{{ value }}</dd>
+                                {% endfor %}
+                            </dl>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if case.documents.validations %}
+                    <div class="validations-list">
+                        <h4>Validation Results</h4>
+                        {% for val in case.documents.validations %}
+                        <div class="validation-item validation-{{ val.severity }}">
+                            <span class="validation-badge badge badge-{{ val.severity }}">{{ val.severity|upper }}</span>
+                            <p>{{ val.message }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if not case.documents.files %}
+                    <div class="empty-state">
+                        <p>No documents uploaded yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Tab -->
+        <div id="tab-risk" class="tab-pane">
+            <div class="risk-tab">
+                <!-- Run Risk Assessment -->
+                <div class="risk-actions">
+                    <button class="btn btn-primary btn-large" hx-post="/api/case/{{ case_id }}/risk/run" hx-target="#risk-results" hx-indicator="#risk-indicator">
+                        <span class="btn-icon">📊</span> Compute Risk Score
+                    </button>
+                    <span id="risk-indicator" class="htmx-indicator">Computing risk score...</span>
+                </div>
+
+                <!-- Risk Results -->
+                <div id="risk-results">
+                    {% if case.risk and case.risk.score is defined %}
+                    <div class="risk-assessment">
+                        <!-- Score Display -->
+                        <div class="risk-score-display">
+                            <div class="score-gauge score-{{ case.risk.level|lower }}">
+                                <div class="score-value">{{ case.risk.score }}</div>
+                                <div class="score-label">{{ case.risk.level }}</div>
+                            </div>
+                            <div class="score-scale">
+                                <span class="scale-label low">Low</span>
+                                <span class="scale-label medium">Medium</span>
+                                <span class="scale-label high">High</span>
+                            </div>
+                        </div>
+
+                        <!-- Factors -->
+                        {% if case.risk.factors %}
+                        <div class="risk-factors">
+                            <h3>Risk Factors</h3>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Factor</th>
+                                        <th>Description</th>
+                                        <th>Points</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for factor in case.risk.factors %}
+                                    <tr>
+                                        <td><code>{{ factor.factor_id }}</code></td>
+                                        <td>{{ factor.description }}</td>
+                                        <td class="points-{{ 'positive' if factor.points_added > 0 else 'neutral' }}">+{{ factor.points_added }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+
+                        <!-- Explanation -->
+                        {% if case.risk.explanation %}
+                        <div class="risk-explanation">
+                            <h3>Explanation</h3>
+                            <div class="explanation-summary">
+                                {{ case.risk.explanation.executive_summary }}
+                            </div>
+                            {% if case.risk.explanation.explanation_bullets %}
+                            <ul class="explanation-bullets">
+                                {% for bullet in case.risk.explanation.explanation_bullets %}
+                                <li>{{ bullet }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Actions -->
+                        {% if case.risk.explanation.recommended_next_actions %}
+                        <div class="risk-actions-list">
+                            <h3>Recommended Next Steps</h3>
+                            <ul>
+                                {% for action in case.risk.explanation.recommended_next_actions %}
+                                <li>{{ action }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No risk assessment computed yet. Upload documents and run validation first.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Case JSON Panel -->
+    <details class="case-json">
+        <summary>View Case JSON (debug)</summary>
+        <pre><code>{{ case|tojson(indent=2) }}</code></pre>
+    </details>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Remove active from all tabs and buttons
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+        // Activate clicked tab
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+});
+</script>
+{% endblock %}

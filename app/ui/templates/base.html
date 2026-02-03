@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Case-to-Clearance: Single Window Copilot{% endblock %}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">Case-to-Clearance</h1>
+                <span class="subtitle">Single Window Copilot</span>
+            </div>
+            <div class="header-actions">
+                {% if case_id %}
+                <a href="/ui/case/{{ case_id }}" class="btn btn-secondary">View Case</a>
+                {% endif %}
+                <a href="/ui" class="btn btn-outline">New Case</a>
+            </div>
+        </header>
+
+        <!-- Disclaimer Banner -->
+        <div class="disclaimer-banner">
+            {{ disclaimer }}
+        </div>
+
+        <!-- Main Content -->
+        <main class="main">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Demo Application | Not for production use | v0.1.0</p>
+        </footer>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

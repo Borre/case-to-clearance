@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}New Case - Case-to-Clearance{% endblock %}
+
+{% block content %}
+<div class="case-setup">
+    <div class="card">
+        <h2>Start a New Case</h2>
+        <p>Begin the customs clearance process by describing your request.</p>
+
+        <div class="setup-actions">
+            <form hx-post="/api/case/new" hx-swap="none" hx-on::after-request="window.location.href = `/ui/case/${event.detail.xhr.responseText.match(/\"case_id\":\"([^\"]+)\"/)[1]}`">
+                <button type="submit" class="btn btn-primary btn-large">
+                    Create New Case
+                </button>
+            </form>
+        </div>
+
+        <div class="info-box">
+            <h3>What happens next?</h3>
+            <ol>
+                <li><strong>Chat with our assistant</strong> - Describe your customs situation</li>
+                <li><strong>Upload documents</strong> - Provide your invoices, bills of lading, etc.</li>
+                <li><strong>Get risk assessment</strong> - Receive an explanation of any issues</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}

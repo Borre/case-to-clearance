@@ -1,0 +1,43 @@
+BILL OF LADING
+==============
+
+B/L Number: CN-2024-12345
+Date: 18 November 2024
+
+Carrier: Pacific Shipping Lines
+Vessel: Pacific Star
+Voyage: V-089
+
+Port of Loading: Shenzhen, China
+Port of Discharge: Callao, Peru
+
+Shipper:
+Shenzhen Electronics Ltd.
+1234 Technology Park
+Shenzhen, Guangdong
+China
+
+Consignee:
+Importadora Global SAC
+Av. Republica de Panama 1234
+Lima, Peru
+
+Notify Party:
+Importadora Global SAC
+Av. Republica de Panama 1234
+Lima, Peru
+
+Cargo Description:
+150 cartons of computer equipment
+Laptops and monitors
+Total: 100 cartons
+
+Gross Weight: 2,500 KG
+Net Weight: 2,200 KG
+Volume: 35 CBM
+
+Marks & Numbers:
+IGS-LIM-2024-001
+CN-2024-12345
+
+Freight: Prepaid

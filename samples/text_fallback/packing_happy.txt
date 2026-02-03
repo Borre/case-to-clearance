@@ -1,0 +1,39 @@
+PACKING LIST
+============
+
+Packing List No: PL-2024-08912
+Date: 15 November 2024
+
+Shipper:
+Shenzhen Electronics Ltd.
+1234 Technology Park
+Shenzhen, Guangdong
+China
+
+Consignee:
+Importadora Global SAC
+Av. Republica de Panama 1234
+Lima, Peru
+
+Shipment: CN-2024-12345
+
+Package Details:
+===============
+
+Carton 1-50: Laptop Computers
+- Quantity: 50 units
+- Model: ThinkPad X1 Carbon
+- Weight per carton: 15 KG
+- Dimensions: 50x40x30 cm
+
+Carton 51-100: Computer Monitors
+- Quantity: 100 units
+- Model: Dell 27-inch LCD
+- Weight per carton: 10 KG
+- Dimensions: 60x40x35 cm
+
+Summary:
+========
+Total Packages: 100 cartons
+Total Weight: 2,200 KG (Net) / 2,500 KG (Gross)
+Total Volume: 35 CBM
