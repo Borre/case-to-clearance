@@ -223,12 +223,9 @@
         },
 
         formatMessage(content) {
-            // Simple markdown-like formatting for **bold** text
-            // Use RegExp constructor to avoid regex literal parsing issues
-            const boldRegex = new RegExp('\\*\\*(.+?)\\*\\*', 'g');
-            return content
-                .replace(boldRegex, '<strong>$1</strong>')
-                .replace(/\n/g, '<br>');
+            // Simple markdown-like formatting - convert newlines to breaks
+            // Note: bold formatting disabled to avoid regex escaping issues
+            return content.replace(/\n/g, '<br>');
         },
 
         updateProcedureInfo(procedure) {
@@ -523,7 +520,8 @@
 
     function init() {
         // Load case ID from URL or session storage
-        const pathMatch = window.location.pathname.match(/\/ui\/case\/([a-f0-9-]+)/);
+        const urlPattern = new RegExp('/ui/case/([a-f0-9-]+)');
+        const pathMatch = window.location.pathname.match(urlPattern);
         if (pathMatch) {
             AppState.setCaseId(pathMatch[1]);
         } else if (AppState.getCaseId()) {
