@@ -1,0 +1,113 @@
+{# Risk fragment for HTMX partial updates #}
+<div id="risk-section" class="risk-section">
+    <div class="section-header">
+        <h3>Risk Assessment</h3>
+        {% if case and case.risk and case.risk.level %}
+        <span class="risk-badge risk-{{ case.risk.level.lower() }}">
+            {{ case.risk.level }}
+        </span>
+        {% endif %}
+    </div>
+
+    {% if case and case.risk and case.risk.score is defined %}
+    <div class="risk-gauge-container">
+        <div class="risk-gauge">
+            <div class="risk-gauge-fill"
+                 style="width: {{ case.risk.score }}%"
+                 data-level="{{ case.risk.level }}">
+            </div>
+            <div class="risk-score">
+                <span class="score-value">{{ case.risk.score }}</span>
+                <span class="score-max">/100</span>
+            </div>
+        </div>
+        <div class="risk-labels">
+            <span>Low Risk</span>
+            <span>Medium Risk</span>
+            <span>High Risk</span>
+        </div>
+    </div>
+
+    {% if case.risk.factors %}
+    <div class="risk-factors">
+        <h4>Risk Factors</h4>
+        <div class="factors-list">
+            {% for factor in case.risk.factors %}
+            <div class="factor-item">
+                <div class="factor-header">
+                    <span class="factor-id">[{{ factor.factor_id }}]</span>
+                    <span class="factor-points">+{{ factor.points_added }}</span>
+                </div>
+                <div class="factor-description">{{ factor.description }}</div>
+                {% if factor.input_value %}
+                <div class="factor-value">
+                    <small>Value: {{ factor.input_value }}</small>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if case.risk.explanation %}
+    <div class="risk-explanation">
+        <h4>Risk Analysis</h4>
+
+        {% if case.risk.explanation.executive_summary %}
+        <div class="explanation-summary">
+            <p>{{ case.risk.explanation.executive_summary }}</p>
+        </div>
+        {% endif %}
+
+        {% if case.risk.explanation.explanation_bullets %}
+        <div class="explanation-bullets">
+            <ul>
+                {% for bullet in case.risk.explanation.explanation_bullets %}
+                <li>{{ bullet }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if case.risk.explanation.recommended_next_actions %}
+        <div class="next-actions">
+            <h5>Recommended Next Steps</h5>
+            <ol>
+                {% for action in case.risk.explanation.recommended_next_actions %}
+                <li>{{ action }}</li>
+                {% endfor %}
+            </ol>
+        </div>
+        {% endif %}
+
+        {% if case.risk.explanation.risk_reduction_actions %}
+        <div class="risk-reduction">
+            <h5>To Reduce Risk</h5>
+            <ul>
+                {% for action in case.risk.explanation.risk_reduction_actions %}
+                <li>{{ action }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="risk-meta">
+        <div class="meta-item">
+            <span class="meta-label">Confidence:</span>
+            <span class="meta-value">{{ case.risk.confidence or 'HIGH' }}</span>
+        </div>
+        {% if case.risk.review_required %}
+        <div class="meta-item warning">
+            <span class="meta-label">⚠️ Review Required</span>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>Risk assessment not yet computed.</p>
+    </div>
+    {% endif %}
+</div>

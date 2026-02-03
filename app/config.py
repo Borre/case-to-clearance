@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     # Derived properties
     @property
     def maas_chat_url(self) -> str:
+        # If endpoint already contains the path, use it as-is
+        if "/v2/chat/completions" in self.maas_endpoint:
+            return self.maas_endpoint
         return f"{self.maas_endpoint}/v2/chat/completions"
 
     @property

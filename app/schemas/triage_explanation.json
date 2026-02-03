@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "triage_explanation.json",
+  "title": "Risk Triage Explanation",
+  "description": "Schema for risk assessment explanation output",
+  "type": "object",
+  "properties": {
+    "executive_summary": {
+      "type": "string",
+      "description": "2-3 sentence summary of the overall risk assessment",
+      "minLength": 50,
+      "maxLength": 500
+    },
+    "explanation_bullets": {
+      "type": "array",
+      "description": "Bullet points explaining the risk factors",
+      "items": {
+        "type": "string",
+        "minLength": 20
+      },
+      "minItems": 1
+    },
+    "recommended_next_actions": {
+      "type": "array",
+      "description": "Recommended actions for the citizen/importer",
+      "items": {
+        "type": "string",
+        "minLength": 10
+      },
+      "minItems": 1
+    },
+    "risk_reduction_actions": {
+      "type": "array",
+      "description": "Actions that would reduce the risk score",
+      "items": {
+        "type": "string",
+        "minLength": 10
+      },
+      "minItems": 0
+    }
+  },
+  "required": ["executive_summary", "explanation_bullets", "recommended_next_actions"]
+}

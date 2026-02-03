@@ -14,7 +14,7 @@ from app.chains.prompts import (
 from app.config import settings
 from app.huawei.maas import get_maas_client
 from app.storage import CaseFile
-from app.data.procedures import PROCEDURES, FIELD_PROMPTS
+from app.data import PROCEDURES
 
 logger = logging.getLogger(__name__)
 

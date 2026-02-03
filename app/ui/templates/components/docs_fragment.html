@@ -1,0 +1,99 @@
+{# Documents fragment for HTMX partial updates #}
+<div id="documents-section" class="documents-section">
+    <div class="section-header">
+        <h3>Uploaded Documents</h3>
+        <span class="badge">{{ (case.documents.files | length) if case and case.documents else 0 }}</span>
+    </div>
+
+    {% if case and case.documents and case.documents.files %}
+    <div class="documents-table">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in case.documents.files %}
+                <tr>
+                    <td>{{ doc.filename }}</td>
+                    <td>
+                        {% for ext in case.documents.extractions if ext.doc_id == doc.doc_id %}
+                            {{ ext.doc_type | title | replace('_', ' ') }}
+                        {% else %}
+                            <span class="text-muted">Processing...</span>
+                        {% endfor %}
+                    </td>
+                    <td>{{ (doc.size / 1024) | round(1) }} KB</td>
+                    <td>
+                        {% for ext in case.documents.extractions if ext.doc_id == doc.doc_id %}
+                            <span class="badge badge-success">Extracted</span>
+                        {% else %}
+                            <span class="badge badge-warning">Pending</span>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if case.documents.extractions %}
+    <div class="extractions-summary">
+        <h4>Extracted Fields</h4>
+        {% for ext in case.documents.extractions %}
+        <div class="extraction-card">
+            <div class="card-header">
+                <h5>{{ ext.doc_type | title | replace('_', ' ') }}</h5>
+                <span class="confidence-badge {{ 'high' if ext.confidence > 0.8 else ('medium' if ext.confidence > 0.5 else 'low') }}">
+                    {{ (ext.confidence * 100) | round(0) }}% confidence
+                </span>
+            </div>
+            <div class="card-body">
+                <dl class="field-list">
+                    {% for key, value in ext.fields.items() %}
+                    <dt>{{ key | replace('_', ' ') | title }}</dt>
+                    <dd>{{ value }}</dd>
+                    {% endfor %}
+                </dl>
+                {% if ext.low_confidence_fields %}
+                <div class="warning-box">
+                    <small>⚠️ Low confidence: {{ ext.low_confidence_fields | join(', ') }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if case.documents.validations %}
+    <div class="validations-summary">
+        <h4>Validation Results</h4>
+        <div class="validation-list">
+            {% for val in case.documents.validations %}
+            <div class="validation-item {{ 'pass' if val.passed else 'fail' }}">
+                <span class="validation-icon">{{ '✓' if val.passed else '✗' }}</span>
+                <div class="validation-content">
+                    <div class="validation-message">{{ val.message }}</div>
+                    {% if val.evidence %}
+                    <small class="text-muted">{{ val.evidence }}</small>
+                    {% endif %}
+                </div>
+                <span class="badge badge-{{ 'success' if val.passed else ('warning' if val.severity == 'warn' else ('high' if val.severity == 'high' else 'critical')) }}">
+                    {{ val.severity | upper }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <p>No documents uploaded yet.</p>
+    </div>
+    {% endif %}
+</div>

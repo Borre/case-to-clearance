@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "extraction_declaration.json",
+  "title": "Customs Declaration Field Extraction",
+  "description": "Schema for structured field extraction from customs declarations",
+  "type": "object",
+  "properties": {
+    "doc_id": {
+      "type": "string",
+      "description": "Document identifier"
+    },
+    "doc_type": {
+      "type": "string",
+      "enum": ["declaration", "customs_declaration"],
+      "description": "Document type"
+    },
+    "fields": {
+      "type": "object",
+      "description": "Extracted fields from the customs declaration",
+      "properties": {
+        "declaration_number": {
+          "type": "string",
+          "description": "Declaration reference number"
+        },
+        "declaration_date": {
+          "type": "string",
+          "description": "Declaration filing date"
+        },
+        "importer_name": {
+          "type": "string",
+          "description": "Name of the importer"
+        },
+        "importer_tax_id": {
+          "type": "string",
+          "description": "Importer's tax identification number"
+        },
+        "customs_office": {
+          "type": "string",
+          "description": "Customs office of entry"
+        },
+        "port_of_entry": {
+          "type": "string",
+          "description": "Port of entry"
+        },
+        "declared_value": {
+          "type": "number",
+          "description": "Declared customs value"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency of declared value"
+        },
+        "hs_codes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "HS codes for declared goods"
+        },
+        "country_of_origin": {
+          "type": "string",
+          "description": "Country where goods originated"
+        },
+        "description_of_goods": {
+          "type": "string",
+          "description": "Description of declared goods"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Declared quantity"
+        },
+        "unit_of_measure": {
+          "type": "string",
+          "description": "Unit of measure"
+        },
+        "duty_amount": {
+          "type": "number",
+          "description": "Calculated duty amount"
+        },
+        "tax_amount": {
+          "type": "number",
+          "description": "Calculated tax amount"
+        },
+        "declaration_type": {
+          "type": "string",
+          "description": "Type of declaration (e.g., consumption, temporary)"
+        },
+        "shipment_id": {
+          "type": "string",
+          "description": "Shipment identifier"
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Overall extraction confidence"
+    },
+    "low_confidence_fields": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Fields with low confidence that need verification"
+    },
+    "missing_fields": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Required fields that could not be extracted"
+    },
+    "extraction_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the extraction was performed"
+    }
+  },
+  "required": ["doc_id", "doc_type", "fields", "confidence"]
+}

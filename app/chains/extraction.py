@@ -181,21 +181,35 @@ class ExtractionChain:
         Returns:
             Extraction result with fields, confidence
         """
+        # Map all possible doc type names to extractors
         type_extractor_map = {
+            # Invoice types
             "invoice": self.extract_invoice,
+            "commercial_invoice": self.extract_invoice,
+            "invoice-commercial": self.extract_invoice,
+            # Bill of Lading types
             "bl": self.extract_bill_of_lading,
             "bill_of_lading": self.extract_bill_of_lading,
+            "bill-of-lading": self.extract_bill_of_lading,
+            "b/l": self.extract_bill_of_lading,
+            # Packing List types
             "packing_list": self.extract_packing_list,
+            "packing-list": self.extract_packing_list,
+            "pl": self.extract_packing_list,
+            # Declaration types
             "declaration": self.extract_declaration,
             "customs_declaration": self.extract_declaration,
+            "customs-declaration": self.extract_declaration,
+            "export_declaration": self.extract_declaration,
         }
 
-        extractor = type_extractor_map.get(doc_type.lower())
+        extractor = type_extractor_map.get(doc_type.lower().replace("-", "_").replace("/", "_"))
 
         if extractor:
             return await extractor(ocr_text, doc_id)
         else:
             # For unknown types, do generic extraction
+            logger.warning(f"No extractor found for doc_type '{doc_type}', using raw_text fallback")
             return {
                 "doc_id": doc_id,
                 "doc_type": doc_type,

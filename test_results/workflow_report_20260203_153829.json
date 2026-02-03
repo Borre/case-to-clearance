@@ -1,0 +1,80 @@
+{
+  "total_tests": 10,
+  "passed": 10,
+  "failed": 0,
+  "results": {
+    "Health Check": {
+      "passed": true
+    },
+    "UI Routes": {
+      "passed": true
+    },
+    "Case Management": {
+      "created_ids": [
+        "case-b3ee6ca614b4"
+      ],
+      "passed": true
+    },
+    "Citizen Intake": {
+      "case_id": "case-d324fa12dd96",
+      "procedure_id": "import-regular",
+      "passed": true
+    },
+    "Document Upload": {
+      "uploaded": 4,
+      "passed": true
+    },
+    "OCR Extraction": {
+      "total_docs": 4,
+      "methods": [
+        "huawei_ocr_sdk",
+        "huawei_ocr_sdk",
+        "huawei_ocr_sdk",
+        "huawei_ocr_sdk"
+      ],
+      "passed": true
+    },
+    "Field Extraction": {
+      "extractions": 4,
+      "validations_passed": 4,
+      "validations_failed": 1,
+      "passed": true
+    },
+    "Risk Assessment": {
+      "score": 35,
+      "level": "MEDIUM",
+      "factors_count": 2,
+      "review_required": false,
+      "passed": true
+    },
+    "Full Case Retrieval": {
+      "sections": 6,
+      "audit_events": 3,
+      "passed": true
+    },
+    "All Demo Scenarios": {
+      "scenarios": {
+        "Happy Path": {
+          "uploaded": 4,
+          "risk_score": 35,
+          "risk_level": "MEDIUM",
+          "passed": true
+        },
+        "Fraudish": {
+          "uploaded": 4,
+          "risk_score": 45,
+          "risk_level": "MEDIUM",
+          "passed": true
+        },
+        "Missing Docs": {
+          "uploaded": 2,
+          "risk_score": 50,
+          "risk_level": "HIGH",
+          "passed": true
+        }
+      },
+      "passed": true
+    }
+  },
+  "timestamp": "2026-02-03T15:38:29.627829"
+}

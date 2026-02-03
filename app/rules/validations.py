@@ -80,7 +80,7 @@ class ValidationEngine:
 
         for rule_id, validator in self.validations.items():
             try:
-                result = await validator(case, extractions, procedure_id)
+                result = validator(case, extractions, procedure_id)
                 if result:
                     results.append(result.to_dict())
             except Exception as e:
@@ -297,17 +297,34 @@ class ValidationEngine:
 
         # Check sequence: invoice < bl < declaration (for imports)
         issues = []
-        date_order = ["invoice", "bill_of_lading", "declaration", "customs_declaration"]
+        # Map various doc_type names to canonical names
+        doc_type_map = {
+            "commercial_invoice": "invoice",
+            "invoice": "invoice",
+            "bill_of_lading": "bill_of_lading",
+            "bl": "bill_of_lading",
+            "customs_declaration": "declaration",
+            "declaration": "declaration",
+        }
+
+        # Remap dates with canonical names
+        canonical_dates = {}
+        for doc_type, date_info in dates.items():
+            canonical = doc_type_map.get(doc_type, doc_type)
+            if canonical not in canonical_dates:
+                canonical_dates[canonical] = date_info
+
+        date_order = ["invoice", "bill_of_lading", "declaration"]
 
         for i in range(len(date_order) - 1):
             first_type = date_order[i]
             second_type = date_order[i + 1]
 
-            if first_type in dates and second_type in dates:
-                if dates[first_type]["date"] > dates[second_type]["date"]:
+            if first_type in canonical_dates and second_type in canonical_dates:
+                if canonical_dates[first_type]["date"] > canonical_dates[second_type]["date"]:
                     issues.append(
-                        f"{first_type} date ({dates[first_type]['date'].date()}) "
-                        f"is after {second_type} date ({dates[second_type]['date'].date()})"
+                        f"{first_type} date ({canonical_dates[first_type]['date'].date()}) "
+                        f"is after {second_type} date ({canonical_dates[second_type]['date'].date()})"
                     )
 
         if issues:

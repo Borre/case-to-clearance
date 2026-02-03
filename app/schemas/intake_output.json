@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "intake_output.json",
+  "title": "Citizen Intake Output",
+  "description": "Schema for procedure classification and field collection output from citizen intake",
+  "type": "object",
+  "properties": {
+    "procedure": {
+      "type": "object",
+      "description": "Selected procedure information",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Procedure identifier (e.g., 'import-regular')"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable procedure name"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Classification confidence score"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Explanation for why this procedure was selected"
+        }
+      },
+      "required": ["id", "name", "confidence", "rationale"]
+    },
+    "detected_fields": {
+      "type": "object",
+      "description": "Fields detected and collected from user input",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "number" },
+          { "type": "array", "items": { "type": "string" } }
+        ]
+      }
+    },
+    "missing_fields": {
+      "type": "array",
+      "description": "Required fields that are still missing",
+      "items": { "type": "string" }
+    },
+    "response": {
+      "type": "string",
+      "description": "Response message to display to the user"
+    }
+  },
+  "required": ["procedure", "detected_fields", "missing_fields", "response"]
+}

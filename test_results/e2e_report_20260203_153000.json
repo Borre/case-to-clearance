@@ -1,0 +1,42 @@
+{
+  "total_scenarios": 3,
+  "passed": 3,
+  "failed": 0,
+  "results": [
+    {
+      "scenario": "Happy Path (Clean Documents)",
+      "success": true,
+      "errors": [],
+      "case_id": "case-2ac27df8e221",
+      "documents": 4,
+      "risk_score": 35,
+      "risk_level": "MEDIUM",
+      "duration_seconds": 51.98
+    },
+    {
+      "scenario": "Fraudish (Suspicious Patterns)",
+      "success": true,
+      "errors": [],
+      "case_id": "case-6641de511f28",
+      "documents": 4,
+      "risk_score": 45,
+      "risk_level": "MEDIUM",
+      "duration_seconds": 66.38
+    },
+    {
+      "scenario": "Missing Docs (Incomplete)",
+      "success": true,
+      "errors": [],
+      "case_id": "case-fa1724dc93b6",
+      "documents": 2,
+      "risk_score": 50,
+      "risk_level": "HIGH",
+      "duration_seconds": 31.72
+    }
+  ],
+  "case_ids": {
+    "Happy Path (Clean Documents)": "case-2ac27df8e221",
+    "Fraudish (Suspicious Patterns)": "case-6641de511f28",
+    "Missing Docs (Incomplete)": "case-fa1724dc93b6"
+  }
+}

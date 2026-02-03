@@ -32,6 +32,20 @@ app = FastAPI(
 )
 
 # ============================================================================
+# MIDDLEWARE AND ERROR HANDLERS
+# ============================================================================
+
+from app.middleware.error_handlers import add_error_handlers
+from app.middleware.rate_limiting import SlidingWindowRateLimiter
+
+# Add error handlers
+add_error_handlers(app)
+
+# Add rate limiting (only in production, or if enabled)
+if settings.app_env == "production":
+    app.add_middleware(SlidingWindowRateLimiter)
+
+# ============================================================================
 # MOUNT STATIC AND TEMPLATES
 # ============================================================================
 
@@ -228,7 +242,7 @@ async def upload_documents(case_id: str, files: list[UploadFile] = File(...)) ->
             "mime": file.content_type or "application/octet-stream",
             "size": len(content),
             "uploaded_at": datetime.now(timezone.utc).isoformat(),
-            "path": str(file_path),
+            "path": f"{doc_id}_{file.filename}",  # Store just the filename, not full path
         }
         case.documents["files"].append(file_info)
         uploaded_files.append(file_info)

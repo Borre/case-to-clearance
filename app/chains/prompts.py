@@ -207,6 +207,8 @@ Extract the following fields:
 - hs_codes: List of HS codes declared
 - goods_description: Description of goods
 - warehouse: Warehouse or customs post
+- shipment_id: Shipment reference ID if present
+- bl_number: Bill of Lading number if present
 
 Return ONLY valid JSON:
 {{
@@ -221,7 +223,9 @@ Return ONLY valid JSON:
     "origin_countries": ["list of countries"],
     "hs_codes": ["list of codes"],
     "goods_description": "value or null",
-    "warehouse": "value or null"
+    "warehouse": "value or null",
+    "shipment_id": "value or null",
+    "bl_number": "value or null"
   }},
   "confidence": 0.0-1.0,
   "low_confidence_fields": ["field_names with low confidence"],

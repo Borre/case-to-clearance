@@ -1,0 +1,38 @@
+{# Chat fragment for HTMX partial updates #}
+<div id="chat-container" class="chat-container">
+    {% if case and case.citizen_intake and case.citizen_intake.messages %}
+        {% for msg in case.citizen_intake.messages %}
+        <div class="message message-{{ msg.role }}">
+            <div class="message-content">
+                <div class="message-role">{{ "You" if msg.role == "user" else "Assistant" }}</div>
+                <div class="message-text">{{ msg.content | safe }}</div>
+            </div>
+            <div class="message-time">
+                <small>{{ msg.timestamp[:19] if msg.timestamp else "" }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<div id="chat-input" class="chat-input-container">
+    <form hx-post="/api/case/{{ case_id or '' }}/chat"
+          hx-target="#chat-container"
+          hx-swap="beforeend"
+          hx-indicator="#chat-loading">
+        <div class="input-group">
+            <input type="text"
+                   name="message"
+                   class="form-input"
+                   placeholder="Describe your customs situation..."
+                   autocomplete="off"
+                   required>
+            <button type="submit" class="btn btn-primary">
+                <span id="chat-loading" class="htmx-indicator">
+                    <span class="spinner"></span>
+                </span>
+                <span>Send</span>
+            </button>
+        </div>
+    </form>
+</div>
