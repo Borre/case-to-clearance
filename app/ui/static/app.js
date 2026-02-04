@@ -474,7 +474,7 @@
             // HTMX will handle the form submission, but we can add custom behavior
         }
 
-        // File input
+        // File input and upload button
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
             fileInput.addEventListener('change', (e) => {
@@ -482,6 +482,18 @@
                     Documents.uploadFiles(e.target.files);
                 }
             });
+
+            // Make the submit button trigger the file input
+            const uploadForm = fileInput.closest('form');
+            if (uploadForm) {
+                const submitBtn = uploadForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        fileInput.click();
+                    });
+                }
+            }
         }
 
         // Drag and drop
@@ -505,8 +517,20 @@
             });
         }
 
-        // Risk assessment button
-        const riskButton = document.getElementById('run-risk-btn');
+        // OCR button
+        const ocrButton = document.getElementById('btn-run-ocr');
+        if (ocrButton) {
+            ocrButton.addEventListener('click', () => Documents.runOCR());
+        }
+
+        // Extraction button
+        const extractButton = document.getElementById('btn-run-extract');
+        if (extractButton) {
+            extractButton.addEventListener('click', () => Documents.runExtraction());
+        }
+
+        // Risk assessment button (support both old and new IDs)
+        const riskButton = document.getElementById('btn-run-risk') || document.getElementById('run-risk-btn');
         if (riskButton) {
             riskButton.addEventListener('click', () => Risk.runAssessment());
         }

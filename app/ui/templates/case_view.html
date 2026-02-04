@@ -112,8 +112,8 @@
                 <!-- Upload Section -->
                 <div class="upload-card">
                     <h3>Upload Documents</h3>
-                    <form class="upload-form" hx-post="/api/case/{{ case_id }}/docs/upload" hx-encoding="multipart/form-data" hx-target="#docs-list" hx-swap="outerHTML">
-                        <input type="file" name="files" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff" class="file-input">
+                    <form class="upload-form" onsubmit="return false;">
+                        <input type="file" id="file-input" name="files" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff" class="file-input">
                         <button type="submit" class="btn btn-primary">Upload Files</button>
                     </form>
                     <p class="help-text">Accepted formats: PDF, PNG, JPG, JPEG, TIFF</p>
@@ -121,10 +121,10 @@
 
                 <!-- Actions -->
                 <div class="doc-actions">
-                    <button class="btn btn-secondary" hx-post="/api/case/{{ case_id }}/docs/run_ocr" hx-indicator="#ocr-indicator">
+                    <button id="btn-run-ocr" class="btn btn-secondary">
                         <span class="btn-icon">🔍</span> Run OCR
                     </button>
-                    <button class="btn btn-secondary" hx-post="/api/case/{{ case_id }}/docs/extract_validate" hx-indicator="#extract-indicator">
+                    <button id="btn-run-extract" class="btn btn-secondary">
                         <span class="btn-icon">⚡</span> Extract & Validate
                     </button>
                     <span id="ocr-indicator" class="htmx-indicator">Processing...</span>
@@ -202,7 +202,7 @@
             <div class="risk-tab">
                 <!-- Run Risk Assessment -->
                 <div class="risk-actions">
-                    <button class="btn btn-primary btn-large" hx-post="/api/case/{{ case_id }}/risk/run" hx-target="#risk-results" hx-indicator="#risk-indicator">
+                    <button id="btn-run-risk" class="btn btn-primary btn-large">
                         <span class="btn-icon">📊</span> Compute Risk Score
                     </button>
                     <span id="risk-indicator" class="htmx-indicator">Computing risk score...</span>
