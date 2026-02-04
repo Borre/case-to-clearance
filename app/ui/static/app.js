@@ -152,12 +152,59 @@
     // ============================================================================
 
     const UI = {
-        showLoading(show = true) {
+        // Global overlay loader
+        showLoading(show = true, message = 'Processing...') {
             const loader = document.getElementById('main-loader');
             if (loader) {
                 loader.style.display = show ? 'flex' : 'none';
+                loader.setAttribute('aria-busy', show ? 'true' : 'false');
+
+                const loaderText = document.getElementById('loader-text');
+                if (loaderText) {
+                    loaderText.textContent = message;
+                }
             }
             AppState.isLoading = show;
+        },
+
+        // Button-level inline loading
+        setButtonLoading(buttonId, loading) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+
+            const btnText = button.querySelector('.btn-text');
+            const btnSpinner = button.querySelector('.btn-spinner');
+            const loadingText = button.dataset.loadingText || 'Loading...';
+
+            if (loading) {
+                button.disabled = true;
+                if (btnText) {
+                    if (!btnText.dataset.original) {
+                        btnText.dataset.original = btnText.textContent;
+                    }
+                    btnText.textContent = loadingText;
+                }
+                if (btnSpinner) btnSpinner.style.display = 'inline-block';
+                button.classList.add('btn-loading');
+            } else {
+                button.disabled = false;
+                if (btnText && btnText.dataset.original) {
+                    btnText.textContent = btnText.dataset.original;
+                }
+                if (btnSpinner) btnSpinner.style.display = 'none';
+                button.classList.remove('btn-loading');
+            }
+        },
+
+        // Store original button text
+        initButton(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                const btnText = button.querySelector('.btn-text');
+                if (btnText && !button.dataset.originalText) {
+                    button.dataset.originalText = btnText.textContent;
+                }
+            }
         },
 
         showNotification(message, type = 'info') {
@@ -204,6 +251,65 @@
             if (bytes < 1024) return bytes + ' B';
             if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        },
+
+        // Add activity item to feed
+        addActivity(message, type = 'info', duration = null) {
+            const feed = document.getElementById('activity-feed');
+            if (!feed) return;
+
+            const icons = {
+                info: 'ℹ️',
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                processing: '⏳'
+            };
+
+            const item = document.createElement('div');
+            item.className = `activity-item ${type}`;
+            item.innerHTML = `
+                <span class="activity-icon">${icons[type] || icons.info}</span>
+                <span class="activity-text">${message}</span>
+                <span class="activity-time">${new Date().toLocaleTimeString()}</span>
+            `;
+
+            feed.insertBefore(item, feed.firstChild);
+
+            // Auto-remove after duration (if specified)
+            if (duration) {
+                setTimeout(() => {
+                    item.classList.add('fade-out');
+                    setTimeout(() => item.remove(), 300);
+                }, duration);
+            }
+        },
+
+        // Clear activity feed
+        clearActivity() {
+            const feed = document.getElementById('activity-feed');
+            if (feed) feed.innerHTML = '';
+        },
+
+        // Update activity item status
+        updateActivity(index, newType, newMessage) {
+            const items = document.querySelectorAll('.activity-item');
+            if (items[index]) {
+                items[index].className = `activity-item ${newType}`;
+                const text = items[index].querySelector('.activity-text');
+                const icon = items[index].querySelector('.activity-icon');
+
+                if (text) text.textContent = newMessage;
+
+                const icons = {
+                    info: 'ℹ️',
+                    success: '✅',
+                    error: '❌',
+                    warning: '⚠️',
+                    processing: '⏳'
+                };
+                if (icon) icon.textContent = icons[newType] || icons.info;
+            }
         }
     };
 
@@ -221,12 +327,26 @@
                 AppState.setCaseId(caseId);
             }
 
+            const submitBtn = document.querySelector('.btn-chat-submit');
+            const btnText = submitBtn?.querySelector('.btn-text');
+            const btnSpinner = submitBtn?.querySelector('.btn-spinner');
+
             try {
                 // Clear input
                 const input = document.querySelector('[name="message"]');
                 if (input) input.value = '';
 
-                UI.showLoading(true);
+                // Show inline loading on button
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    if (btnText) {
+                        btnText.dataset.original = btnText.textContent;
+                        btnText.textContent = 'Sending...';
+                    }
+                    if (btnSpinner) btnSpinner.style.display = 'inline-block';
+                }
+
+                UI.addActivity('Sending message...', 'processing');
 
                 const result = await API.post(
                     `${API_BASE}/case/${caseId}/chat`,
@@ -244,10 +364,19 @@
                 }
 
                 UI.scrollToBottom();
+                UI.updateActivity(0, 'success', 'Message sent!');
             } catch (error) {
                 UI.showNotification(error.message, 'error');
+                UI.addActivity(`Failed to send message: ${error.message}`, 'error');
             } finally {
-                UI.showLoading(false);
+                // Reset button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (btnText && btnText.dataset.original) {
+                        btnText.textContent = btnText.dataset.original;
+                    }
+                    if (btnSpinner) btnSpinner.style.display = 'none';
+                }
             }
         },
 
@@ -358,7 +487,9 @@
 
         async runOCR() {
             try {
-                UI.updateProgress('documents', 25);
+                UI.initButton('btn-run-ocr');
+                UI.setButtonLoading('btn-run-ocr', true);
+                UI.addActivity('Starting OCR process... (10-20 seconds)', 'processing');
 
                 const caseId = AppState.getCaseId();
                 if (!caseId) {
@@ -366,20 +497,23 @@
                 }
                 await API.post(`${API_BASE}/case/${caseId}/docs/run_ocr`, {});
 
-                UI.updateProgress('documents', 50);
+                UI.updateActivity(0, 'success', 'OCR complete!');
+                UI.addActivity('Extracting data from documents... (5-15 seconds)', 'processing');
 
                 // Run extraction
                 await this.runExtraction();
 
             } catch (error) {
+                UI.updateActivity(0, 'error', 'OCR failed');
                 UI.showNotification(`OCR failed: ${error.message}`, 'error');
-                UI.updateProgress('documents', 0);
+                UI.setButtonLoading('btn-run-ocr', false);
             }
         },
 
         async runExtraction() {
             try {
-                UI.updateProgress('documents', 75);
+                UI.initButton('btn-run-extract');
+                UI.setButtonLoading('btn-run-extract', true);
 
                 const caseId = AppState.getCaseId();
                 if (!caseId) {
@@ -390,21 +524,21 @@
                     {}
                 );
 
-                UI.updateProgress('documents', 100);
-
                 this.renderExtractions(result.extractions);
                 this.renderValidations(result.validations);
 
                 // Move to risk stage
                 AppState.setStage('risk');
+                UI.addActivity('Documents processed successfully!', 'success');
                 UI.showNotification('Documents processed. Ready for risk assessment.', 'success');
 
                 // Auto-run risk assessment
                 await Risk.runAssessment();
 
             } catch (error) {
+                UI.addActivity(`Extraction failed: ${error.message}`, 'error');
                 UI.showNotification(`Extraction failed: ${error.message}`, 'error');
-                UI.updateProgress('documents', 0);
+                UI.setButtonLoading('btn-run-extract', false);
             }
         },
 
@@ -444,17 +578,21 @@
             if (!caseId) return;
 
             try {
-                UI.showLoading(true);
+                UI.initButton('btn-run-risk');
+                UI.setButtonLoading('btn-run-risk', true);
+                UI.addActivity('Analyzing risk... (10-30 seconds)', 'processing');
 
                 const result = await API.post(`${API_BASE}/case/${caseId}/risk/run`, {});
 
                 this.renderResult(result);
+                UI.addActivity('Risk assessment complete!', 'success');
                 UI.showNotification('Risk assessment complete', 'success');
 
             } catch (error) {
+                UI.addActivity(`Risk assessment failed: ${error.message}`, 'error');
                 UI.showNotification(`Risk assessment failed: ${error.message}`, 'error');
             } finally {
-                UI.showLoading(false);
+                UI.setButtonLoading('btn-run-risk', false);
             }
         },
 
@@ -517,6 +655,11 @@
     // ============================================================================
 
     function initEventListeners() {
+        // Initialize button states
+        UI.initButton('btn-run-ocr');
+        UI.initButton('btn-run-extract');
+        UI.initButton('btn-run-risk');
+
         // Chat form
         const chatForm = document.querySelector('#chat-input form, [hx-post*="/chat"]');
         if (chatForm) {

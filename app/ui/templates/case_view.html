@@ -58,34 +58,54 @@
 
     <!-- Step Instructions - Dynamic based on current step -->
     <div class="step-instructions" id="step-instructions">
-        <div class="instruction-card" data-step="intake">
+        <div class="instruction-card" data-step="intake" data-step-number="1">
             <h5>Step 1: Describe Your Customs Request</h5>
             <p>Tell us what you're importing and from where. Our assistant will gather the necessary information to process your clearance.</p>
             <div class="instruction-tips">
                 <span class="tip-icon">💡</span>
-                <span>Be specific about: goods type, origin country, and quantity</span>
+                <div>
+                    <strong>Tip:</strong> Be specific about: goods type, origin country, and quantity
+                    <br><small>Example: "I'm importing 500 units of electronics from China"</small>
+                </div>
             </div>
         </div>
 
-        <div class="instruction-card" data-step="documents" style="display:none;">
+        <div class="instruction-card" data-step="documents" style="display:none;" data-step-number="2">
             <h5>Step 2: Upload Required Documents</h5>
-            <p>Upload your commercial invoice, bill of lading, packing list, and any other required documents.</p>
+            <p>Upload your commercial invoice, bill of lading, packing list, and any other required documents for processing.</p>
             <div class="instruction-tips">
                 <span class="tip-icon">📄</span>
-                <span>Accepted formats: PDF, PNG, JPG, JPEG, TIFF (max 20MB each)</span>
+                <div>
+                    <strong>Accepted formats:</strong> PDF, PNG, JPG, JPEG, TIFF (max 20MB each)
+                    <br><small>Drag & drop files or click to browse</small>
+                </div>
             </div>
             <div class="instruction-status">
-                <span class="status-required">Required:</span> Invoice, Bill of Lading, Packing List
+                <span class="status-required">⚠️ Required:</span> Invoice, Bill of Lading, Packing List
             </div>
         </div>
 
-        <div class="instruction-card" data-step="risk" style="display:none;">
+        <div class="instruction-card" data-step="risk" style="display:none;" data-step-number="3">
             <h5>Step 3: Risk Assessment</h5>
-            <p>We'll analyze your documents and provide a risk score with recommendations for clearance.</p>
+            <p>We'll analyze your documents and provide a comprehensive risk score with detailed recommendations for clearance.</p>
             <div class="instruction-tips">
                 <span class="tip-icon">📊</span>
-                <span>This usually takes 10-30 seconds depending on document complexity</span>
+                <div>
+                    <strong>Processing time:</strong> Usually 10-30 seconds depending on document complexity
+                    <br><small>You'll receive a detailed breakdown of any risk factors</small>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="activity-section" id="activity-section">
+        <div class="activity-header">
+            <h4>What's Happening</h4>
+            <button class="btn-link" onclick="document.getElementById('activity-feed').innerHTML=''">Clear</button>
+        </div>
+        <div class="activity-feed" id="activity-feed">
+            <!-- Activity items will be added here dynamically -->
         </div>
     </div>
 
@@ -146,8 +166,13 @@
                     </div>
 
                     <form id="chat-form" class="chat-form" onsubmit="return false;">
-                        <input type="text" name="message" class="chat-input" placeholder="Type your message..." required autofocus>
-                        <button type="submit" class="btn btn-primary">Send</button>
+                        <div class="chat-input-wrapper">
+                            <input type="text" name="message" class="chat-input" placeholder="Type your message..." required autofocus>
+                            <button type="submit" class="btn btn-primary btn-chat-submit">
+                                <span class="btn-text">Send</span>
+                                <span class="btn-spinner spinner" style="display: none;"></span>
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -194,20 +219,16 @@
 
                 <!-- Actions -->
                 <div class="doc-actions">
-                    <button id="btn-run-ocr" class="btn btn-secondary">
-                        <span class="btn-icon">🔍</span> Run OCR
+                    <button id="btn-run-ocr" class="btn btn-secondary" data-loading-text="Reading documents...">
+                        <span class="btn-icon">🔍</span>
+                        <span class="btn-text">Run OCR</span>
+                        <span class="btn-spinner spinner" style="display: none;"></span>
                     </button>
-                    <button id="btn-run-extract" class="btn btn-secondary">
-                        <span class="btn-icon">⚡</span> Extract & Validate
+                    <button id="btn-run-extract" class="btn btn-secondary" data-loading-text="Extracting data...">
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-text">Extract & Validate</span>
+                        <span class="btn-spinner spinner" style="display: none;"></span>
                     </button>
-                    <span id="ocr-indicator" class="htmx-indicator">
-                        <span class="spinner"></span>
-                        <span class="indicator-text">Reading documents... (10-20 seconds)</span>
-                    </span>
-                    <span id="extract-indicator" class="htmx-indicator">
-                        <span class="spinner"></span>
-                        <span class="indicator-text">Extracting data... (5-15 seconds)</span>
-                    </span>
                 </div>
 
                 <!-- Documents List -->
@@ -281,13 +302,11 @@
             <div class="risk-tab">
                 <!-- Run Risk Assessment -->
                 <div class="risk-actions">
-                    <button id="btn-run-risk" class="btn btn-primary btn-large">
-                        <span class="btn-icon">📊</span> Compute Risk Score
+                    <button id="btn-run-risk" class="btn btn-primary btn-large" data-loading-text="Analyzing risk...">
+                        <span class="btn-icon">📊</span>
+                        <span class="btn-text">Compute Risk Score</span>
+                        <span class="btn-spinner spinner" style="display: none;"></span>
                     </button>
-                    <span id="risk-indicator" class="htmx-indicator">
-                        <span class="spinner"></span>
-                        <span class="indicator-text">Analyzing risk... (10-30 seconds)</span>
-                    </span>
                 </div>
 
                 <!-- Risk Results -->

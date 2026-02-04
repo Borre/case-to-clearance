@@ -12,6 +12,15 @@
     <div class="app-container">
         <!-- Notifications Container -->
         <div id="notifications" class="notifications-container"></div>
+
+        <!-- Global Loading Overlay -->
+        <div id="main-loader" class="loader-overlay" style="display: none;" aria-live="polite" aria-busy="false">
+            <div class="loader-content">
+                <div class="spinner-large"></div>
+                <p class="loader-text" id="loader-text">Processing...</p>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="header">
             <div class="header-content">
@@ -43,7 +52,7 @@
     </div>
 
     <!-- Application JavaScript -->
-    <script src="/static/app.js?v=1.1.1"></script>
+    <script src="/static/app.js?v=1.2.0"></script>
 
     {% block scripts %}{% endblock %}
 </body>
