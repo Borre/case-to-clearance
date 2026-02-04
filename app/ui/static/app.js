@@ -442,7 +442,8 @@
             if (validFiles.length === 0) return;
 
             try {
-                UI.showLoading(true);
+                console.log('[Documents] Starting upload...');
+                UI.addActivity(`Uploading ${validFiles.length} file(s)...`, 'processing');
 
                 const result = await API.post(
                     `${API_BASE}/case/${caseId}/docs/upload`,
@@ -451,15 +452,17 @@
                 );
 
                 console.log('[Documents] Upload result:', result);
+                UI.addActivity(`Uploaded ${result.uploaded.length} file(s) successfully!`, 'success');
                 UI.showNotification(`Uploaded ${result.uploaded.length} file(s)`, 'success');
 
                 // Auto-run OCR
+                console.log('[Documents] Calling runOCR...');
                 await this.runOCR();
 
             } catch (error) {
+                console.error('[Documents] Upload error:', error);
+                UI.addActivity(`Upload failed: ${error.message}`, 'error');
                 UI.showNotification(error.message, 'error');
-            } finally {
-                UI.showLoading(false);
             }
         },
 
@@ -487,23 +490,29 @@
 
         async runOCR() {
             try {
+                console.log('[Documents] runOCR called');
                 UI.initButton('btn-run-ocr');
                 UI.setButtonLoading('btn-run-ocr', true);
                 UI.addActivity('Starting OCR process... (10-20 seconds)', 'processing');
 
                 const caseId = AppState.getCaseId();
+                console.log('[Documents] runOCR caseId:', caseId);
                 if (!caseId) {
                     throw new Error('No case ID found. Please start a conversation first.');
                 }
-                await API.post(`${API_BASE}/case/${caseId}/docs/run_ocr`, {});
+                console.log('[Documents] Calling OCR API...');
+                await API.post(`${API_BASE}/case}/${caseId}/docs/run_ocr`, {});
+                console.log('[Documents] OCR API call complete');
 
                 UI.updateActivity(0, 'success', 'OCR complete!');
                 UI.addActivity('Extracting data from documents... (5-15 seconds)', 'processing');
 
                 // Run extraction
+                console.log('[Documents] Calling runExtraction...');
                 await this.runExtraction();
 
             } catch (error) {
+                console.error('[Documents] OCR error:', error);
                 UI.updateActivity(0, 'error', 'OCR failed');
                 UI.showNotification(`OCR failed: ${error.message}`, 'error');
                 UI.setButtonLoading('btn-run-ocr', false);
