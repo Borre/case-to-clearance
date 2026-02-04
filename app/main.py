@@ -103,6 +103,7 @@ async def ui_case(request: Request, case_id: str) -> HTMLResponse:
         name="case_view.html",
         context={
             "case": case.model_dump(),
+            "case_id": case_id,
             "disclaimer": settings.disclaimer,
         },
     )

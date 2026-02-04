@@ -16,7 +16,8 @@
 </div>
 
 <div id="chat-input" class="chat-input-container">
-    <form hx-post="/api/case/{{ case_id or '' }}/chat"
+    {% if case_id %}
+    <form hx-post="/api/case/{{ case_id }}/chat"
           hx-target="#chat-container"
           hx-swap="beforeend"
           hx-indicator="#chat-loading">
@@ -35,4 +36,9 @@
             </button>
         </div>
     </form>
+    {% else %}
+    <div class="input-group">
+        <p class="text-muted">Please create a case to start chatting.</p>
+    </div>
+    {% endif %}
 </div>
