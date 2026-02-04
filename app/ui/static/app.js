@@ -414,13 +414,17 @@
 
         updateProcedureInfo(procedure) {
             const container = document.getElementById('procedure-info');
-            if (!container || !procedure) return;
+            if (!container) return;
+
+            if (!procedure || !procedure.name) {
+                container.innerHTML = '<p class="text-muted">Procedure not yet identified. Start chatting below.</p>';
+                return;
+            }
 
             container.innerHTML = `
-                <div class="procedure-card">
-                    <h4>${procedure.name}</h4>
-                    <p>${procedure.rationale || ''}</p>
-                    <small>Confidence: ${(procedure.confidence * 100).toFixed(0)}%</small>
+                <div class="procedure-info-content">
+                    <p><strong>${this.escapeHtml(procedure.name)}</strong></p>
+                    <p>Confidence: ${(procedure.confidence * 100).toFixed(0)}%</p>
                 </div>
             `;
         },
