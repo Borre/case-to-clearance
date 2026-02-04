@@ -145,7 +145,7 @@
                         {% endif %}
                     </div>
 
-                    <form class="chat-form" hx-post="/api/case/{{ case_id }}/chat" hx-target="#chat-messages" hx-swap="innerHTML">
+                    <form id="chat-form" class="chat-form" onsubmit="return false;">
                         <input type="text" name="message" class="chat-input" placeholder="Type your message..." required autofocus>
                         <button type="submit" class="btn btn-primary">Send</button>
                     </form>

@@ -193,7 +193,7 @@
             }
         },
 
-        scrollToBottom(selector = '#chat-container') {
+        scrollToBottom(selector = '#chat-messages') {
             const container = document.querySelector(selector);
             if (container) {
                 container.scrollTop = container.scrollHeight;
@@ -252,7 +252,7 @@
         },
 
         renderMessages(messages) {
-            const container = document.getElementById('chat-container');
+            const container = document.getElementById('chat-messages');
             if (!container) return;
 
             container.innerHTML = messages.map(msg => `
@@ -569,6 +569,18 @@
                 dropZone.classList.remove('dragover');
                 if (e.dataTransfer.files.length > 0) {
                     Documents.uploadFiles(e.dataTransfer.files);
+                }
+            });
+        }
+
+        // Chat form
+        const chatForm = document.getElementById('chat-form');
+        if (chatForm) {
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = chatForm.querySelector('input[name="message"]');
+                if (input && input.value.trim()) {
+                    Chat.sendMessage(input.value.trim());
                 }
             });
         }
