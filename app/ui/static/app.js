@@ -45,6 +45,7 @@
         setStage(stage) {
             this.currentStage = stage;
             this.updateStageIndicators();
+            this.updateWizardProgress(stage);
         },
 
         updateStageIndicators() {
@@ -56,6 +57,50 @@
                 }
                 // Could add logic for completed stages
             });
+        },
+
+        updateWizardProgress(stage) {
+            const stages = ['intake', 'documents', 'risk'];
+            const currentIndex = stages.indexOf(stage);
+            const stepHeadings = {
+                intake: 'Describe your customs request',
+                documents: 'Upload required documents',
+                risk: 'Review risk assessment'
+            };
+
+            // Update step counter
+            const currentStepEl = document.querySelector('.wizard-current-step');
+            if (currentStepEl) {
+                currentStepEl.textContent = currentIndex + 1;
+            }
+
+            // Update heading text
+            const headingText = document.querySelector('.wizard-heading-text');
+            if (headingText) {
+                headingText.textContent = stepHeadings[stage];
+            }
+
+            // Update step indicators
+            document.querySelectorAll('.wizard-step').forEach((el, index) => {
+                el.classList.remove('completed', 'current');
+                el.removeAttribute('aria-current');
+
+                if (index < currentIndex) {
+                    el.classList.add('completed');
+                } else if (index === currentIndex) {
+                    el.classList.add('current');
+                    el.setAttribute('aria-current', 'true');
+                }
+            });
+
+            // Update instructions
+            document.querySelectorAll('.instruction-card').forEach(el => {
+                el.style.display = 'none';
+            });
+            const activeInstruction = document.querySelector(`.instruction-card[data-step="${stage}"]`);
+            if (activeInstruction) {
+                activeInstruction.style.display = 'block';
+            }
         }
     };
 
