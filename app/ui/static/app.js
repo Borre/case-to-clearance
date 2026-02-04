@@ -551,7 +551,7 @@
 
     function init() {
         // Load case ID from URL or session storage
-        const urlPattern = new RegExp('/ui/case/([a-f0-9-]+)');
+        const urlPattern = new RegExp('/ui/case/([a-zA-Z0-9-]+)');
         const pathMatch = window.location.pathname.match(urlPattern);
         if (pathMatch) {
             AppState.setCaseId(pathMatch[1]);
