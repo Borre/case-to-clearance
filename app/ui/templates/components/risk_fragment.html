@@ -14,7 +14,7 @@
         <div class="risk-gauge">
             <div class="risk-gauge-fill"
                  style="width: {{ case.risk.score }}%"
-                 data-level="{{ case.risk.level }}">
+                 data-level="{{ case.risk.level or 'MEDIUM' }}">
             </div>
             <div class="risk-score">
                 <span class="score-value">{{ case.risk.score }}</span>

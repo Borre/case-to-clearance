@@ -168,11 +168,12 @@
 
     const Chat = {
         async sendMessage(message) {
-            const caseId = AppState.getCaseId();
+            let caseId = AppState.getCaseId();
             if (!caseId) {
                 // Create new case if needed
                 const newCase = await API.post(`${API_BASE}/case/new`);
-                AppState.setCaseId(newCase.case_id);
+                caseId = newCase.case_id;
+                AppState.setCaseId(caseId);
             }
 
             try {
@@ -183,7 +184,7 @@
                 UI.showLoading(true);
 
                 const result = await API.post(
-                    `${API_BASE}/case/${AppState.getCaseId()}/chat`,
+                    `${API_BASE}/case/${caseId}/chat`,
                     { message },
                     true
                 );
@@ -311,6 +312,9 @@
                 UI.updateProgress('documents', 25);
 
                 const caseId = AppState.getCaseId();
+                if (!caseId) {
+                    throw new Error('No case ID found. Please start a conversation first.');
+                }
                 await API.post(`${API_BASE}/case/${caseId}/docs/run_ocr`, {});
 
                 UI.updateProgress('documents', 50);
@@ -329,6 +333,9 @@
                 UI.updateProgress('documents', 75);
 
                 const caseId = AppState.getCaseId();
+                if (!caseId) {
+                    throw new Error('No case ID found. Please start a conversation first.');
+                }
                 const result = await API.post(
                     `${API_BASE}/case/${caseId}/docs/extract_validate`,
                     {}

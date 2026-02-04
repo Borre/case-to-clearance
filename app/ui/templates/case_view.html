@@ -214,9 +214,9 @@
                     <div class="risk-assessment">
                         <!-- Score Display -->
                         <div class="risk-score-display">
-                            <div class="score-gauge score-{{ case.risk.level|lower }}">
+                            <div class="score-gauge score-{{ (case.risk.level or 'MEDIUM')|lower }}">
                                 <div class="score-value">{{ case.risk.score }}</div>
-                                <div class="score-label">{{ case.risk.level }}</div>
+                                <div class="score-label">{{ case.risk.level or 'MEDIUM' }}</div>
                             </div>
                             <div class="score-scale">
                                 <span class="scale-label low">Low</span>
