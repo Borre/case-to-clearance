@@ -677,33 +677,33 @@
         UI.initButton('btn-run-extract');
         UI.initButton('btn-run-risk');
 
-        // File input and upload button
-        const fileInput = document.getElementById('file-input');
-        if (fileInput) {
-            console.log('[App] Found file-input element, attaching listeners');
+        // File input and upload button (only on case pages)
+        if (window.location.pathname.match(/\/ui\/case\/.+/)) {
+            const fileInput = document.getElementById('file-input');
+            if (fileInput) {
+                console.log('[App] Found file-input element, attaching listeners');
 
-            fileInput.addEventListener('change', (e) => {
-                console.log('[App] File input changed, files:', e.target.files.length);
-                if (e.target.files.length > 0) {
-                    Documents.uploadFiles(e.target.files);
-                }
-            });
+                fileInput.addEventListener('change', (e) => {
+                    console.log('[App] File input changed, files:', e.target.files.length);
+                    if (e.target.files.length > 0) {
+                        Documents.uploadFiles(e.target.files);
+                    }
+                });
 
-            // Make the submit button trigger the file input
-            const uploadForm = fileInput.closest('form');
-            if (uploadForm) {
-                const submitBtn = uploadForm.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('[App] Upload button clicked, triggering file picker');
-                        fileInput.click();
-                    });
+                // Make the submit button trigger the file input
+                const uploadForm = fileInput.closest('form');
+                if (uploadForm) {
+                    const submitBtn = uploadForm.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('[App] Upload button clicked, triggering file picker');
+                            fileInput.click();
+                        });
+                    }
                 }
             }
-        } else {
-            console.warn('[App] file-input element not found!');
         }
 
         // Drag and drop
