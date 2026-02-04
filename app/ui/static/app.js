@@ -614,56 +614,103 @@
         },
 
         renderResult(result) {
-            // Update risk gauge
-            const gauge = document.querySelector('.risk-gauge-fill');
-            const scoreValue = document.querySelector('.score-value');
-            if (gauge) {
-                gauge.style.width = `${result.score}%`;
-                gauge.setAttribute('data-level', result.level);
-            }
-            if (scoreValue) {
-                scoreValue.textContent = result.score;
+            const resultsContainer = document.getElementById('risk-results');
+            if (!resultsContainer) {
+                console.error('[Risk] #risk-results container not found');
+                return;
             }
 
-            // Update risk level badge
-            const badge = document.querySelector('.risk-badge');
-            if (badge) {
-                badge.textContent = result.level;
-                badge.className = `risk-badge risk-${result.level.toLowerCase()}`;
-            }
+            const level = (result.level || 'MEDIUM').toLowerCase();
+            const score = result.score || 0;
 
-            // Render factors
-            this.renderFactors(result.factors || []);
-
-            // Render explanation
-            this.renderExplanation(result.explanation || {});
-        },
-
-        renderFactors(factors) {
-            const container = document.getElementById('risk-factors');
-            if (!container) return;
-
-            container.innerHTML = factors.map(factor => `
-                <div class="factor-item">
-                    <span class="factor-id">[${factor.factor_id}]</span>
-                    <span class="factor-points">+${factor.points_added}</span>
-                    <div class="factor-description">${factor.description}</div>
-                </div>
+            // Build factors table rows
+            const factorsRows = (result.factors || []).map(factor => `
+                <tr>
+                    <td><code>${this.escapeHtml(factor.factor_id)}</code></td>
+                    <td>${this.escapeHtml(factor.description)}</td>
+                    <td class="points-${factor.points_added > 0 ? 'positive' : 'neutral'}">+${factor.points_added}</td>
+                </tr>
             `).join('');
+
+            // Build explanation section
+            let explanationHtml = '';
+            if (result.explanation) {
+                const execSummary = result.explanation.executive_summary || '';
+                const bullets = (result.explanation.explanation_bullets || []).map(b => `<li>${this.escapeHtml(b)}</li>`).join('');
+                const nextActions = (result.explanation.recommended_next_actions || []).map(a => `<li>${this.escapeHtml(a)}</li>`).join('');
+
+                explanationHtml = `
+                    ${execSummary ? `
+                    <div class="risk-explanation">
+                        <h3>Explanation</h3>
+                        <div class="explanation-summary">
+                            ${this.escapeHtml(execSummary)}
+                        </div>
+                        ${bullets ? `
+                        <ul class="explanation-bullets">
+                            ${bullets}
+                        </ul>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+                    ${nextActions ? `
+                    <div class="risk-actions-list">
+                        <h3>Recommended Next Steps</h3>
+                        <ul>
+                            ${nextActions}
+                        </ul>
+                    </div>
+                    ` : ''}
+                `;
+            }
+
+            // Build the complete HTML
+            const html = `
+                <div class="risk-assessment">
+                    <!-- Score Display -->
+                    <div class="risk-score-display">
+                        <div class="score-gauge score-${level}">
+                            <div class="score-value">${score}</div>
+                            <div class="score-label">${result.level || 'MEDIUM'}</div>
+                        </div>
+                        <div class="score-scale">
+                            <span class="scale-label low">Low</span>
+                            <span class="scale-label medium">Medium</span>
+                            <span class="scale-label high">High</span>
+                        </div>
+                    </div>
+
+                    <!-- Factors -->
+                    ${factorsRows ? `
+                    <div class="risk-factors">
+                        <h3>Risk Factors</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Factor</th>
+                                    <th>Description</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${factorsRows}
+                            </tbody>
+                        </table>
+                    </div>
+                    ` : ''}
+
+                    ${explanationHtml}
+                </div>
+            `;
+
+            resultsContainer.innerHTML = html;
+            console.log('[Risk] Results rendered successfully');
         },
 
-        renderExplanation(explanation) {
-            const container = document.getElementById('risk-explanation');
-            if (!container) return;
-
-            container.innerHTML = `
-                ${explanation.executive_summary ? `<p>${explanation.executive_summary}</p>` : ''}
-                ${explanation.explanation_bullets ? `
-                    <ul>
-                        ${explanation.explanation_bullets.map(b => `<li>${b}</li>`).join('')}
-                    </ul>
-                ` : ''}
-            `;
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     };
 
