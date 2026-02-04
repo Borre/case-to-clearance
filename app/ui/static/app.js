@@ -660,12 +660,6 @@
         UI.initButton('btn-run-extract');
         UI.initButton('btn-run-risk');
 
-        // Chat form
-        const chatForm = document.querySelector('#chat-input form, [hx-post*="/chat"]');
-        if (chatForm) {
-            // HTMX will handle the form submission, but we can add custom behavior
-        }
-
         // File input and upload button
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
