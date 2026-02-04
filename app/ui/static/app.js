@@ -254,7 +254,9 @@
 
     const Documents = {
         async uploadFiles(files) {
+            console.log('[Documents] uploadFiles called with', files.length, 'files');
             const caseId = AppState.getCaseId();
+            console.log('[Documents] caseId:', caseId);
             if (!caseId) {
                 UI.showNotification('Please start a conversation first.', 'warning');
                 return;
@@ -262,6 +264,7 @@
 
             // Validate files
             const validFiles = this.validateFiles(files);
+            console.log('[Documents] validFiles:', validFiles.length);
             if (validFiles.length === 0) return;
 
             try {
@@ -273,6 +276,7 @@
                     true
                 );
 
+                console.log('[Documents] Upload result:', result);
                 UI.showNotification(`Uploaded ${result.uploaded.length} file(s)`, 'success');
 
                 // Auto-run OCR
@@ -477,7 +481,10 @@
         // File input and upload button
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
+            console.log('[App] Found file-input element, attaching listeners');
+
             fileInput.addEventListener('change', (e) => {
+                console.log('[App] File input changed, files:', e.target.files.length);
                 if (e.target.files.length > 0) {
                     Documents.uploadFiles(e.target.files);
                 }
@@ -490,10 +497,14 @@
                 if (submitBtn) {
                     submitBtn.addEventListener('click', (e) => {
                         e.preventDefault();
+                        e.stopPropagation();
+                        console.log('[App] Upload button clicked, triggering file picker');
                         fileInput.click();
                     });
                 }
             }
+        } else {
+            console.warn('[App] file-input element not found!');
         }
 
         // Drag and drop
