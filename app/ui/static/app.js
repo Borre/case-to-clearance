@@ -548,7 +548,7 @@
                     throw new Error('No case ID found. Please start a conversation first.');
                 }
                 console.log('[Documents] Calling OCR API...');
-                await API.post(`${API_BASE}/case}/${caseId}/docs/run_ocr`, {});
+                await API.post(`${API_BASE}/case/${caseId}/docs/run_ocr`, {});
                 console.log('[Documents] OCR API call complete');
 
                 UI.updateActivity(0, 'success', 'OCR complete!');
