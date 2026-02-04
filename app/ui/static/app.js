@@ -502,6 +502,9 @@
                 UI.addActivity(`Uploaded ${result.uploaded.length} file(s) successfully!`, 'success');
                 UI.showNotification(`Uploaded ${result.uploaded.length} file(s)`, 'success');
 
+                // Update the documents list
+                this.renderUploadedFiles(result.uploaded);
+
                 // Auto-run OCR
                 console.log('[Documents] Calling runOCR...');
                 await this.runOCR();
@@ -621,6 +624,68 @@
                     <span>${val.message}</span>
                 </div>
             `).join('');
+        },
+
+        renderUploadedFiles(files) {
+            const container = document.getElementById('docs-list');
+            if (!container) return;
+
+            if (!files || files.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No documents uploaded yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="docs-list">
+                    <h4>Uploaded Documents (${files.length})</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${files.map(file => `
+                                <tr>
+                                    <td>${this.escapeHtml(file.filename)}</td>
+                                    <td>${this.escapeHtml(file.mime)}</td>
+                                    <td>${(file.size / 1024).toFixed(1)} KB</td>
+                                    <td><span class="badge badge-info">Uploaded</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        },
+
+        switchToTab(tabName) {
+            // Remove active from all tabs and buttons
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+            // Activate target tab
+            const tabBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+            const tabPane = document.getElementById(`tab-${tabName}`);
+
+            if (tabBtn) tabBtn.classList.add('active');
+            if (tabPane) tabPane.classList.add('active');
+
+            // Update wizard stage
+            AppState.setStage(tabName === 'citizen' ? 'intake' : tabName);
+        },
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     };
 
@@ -643,6 +708,9 @@
                 this.renderResult(result);
                 UI.addActivity('Risk assessment complete!', 'success');
                 UI.showNotification('Risk assessment complete', 'success');
+
+                // Switch to Risk tab to show results
+                Documents.switchToTab('risk');
 
             } catch (error) {
                 UI.addActivity(`Risk assessment failed: ${error.message}`, 'error');
