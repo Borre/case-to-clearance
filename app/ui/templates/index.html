@@ -9,7 +9,7 @@
         <p>Begin the customs clearance process by describing your request.</p>
 
         <div class="setup-actions">
-            <form hx-post="/api/case/new" hx-swap="none" hx-on::after-request="window.location.href = `/ui/case/${event.detail.xhr.responseText.match(/\"case_id\":\"([^\"]+)\"/)[1]}`">
+            <form hx-post="/api/case/new" hx-swap="none" hx-on::after-request="const data=JSON.parse(event.detail.xhr.responseText);window.location.href='/ui/case/'+data.case_id">
                 <button type="submit" class="btn btn-primary btn-large">
                     Create New Case
                 </button>
