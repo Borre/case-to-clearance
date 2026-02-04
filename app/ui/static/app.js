@@ -365,6 +365,7 @@
                 // Update UI
                 this.renderMessages(result.messages || []);
                 this.updateProcedureInfo(result.procedure);
+                this.updateCollectedFields(result.collected_fields || {}, result.missing_fields || []);
 
                 if (result.missing_fields && result.missing_fields.length === 0) {
                     AppState.setStage('documents');
@@ -427,6 +428,44 @@
         showDocumentUploadPrompt() {
             UI.showNotification('Please upload the required documents to continue.', 'info');
             document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
+        },
+
+        updateCollectedFields(collectedFields, missingFields) {
+            const container = document.getElementById('collected-fields');
+            if (!container) return;
+
+            // Build collected fields HTML
+            const collectedEntries = Object.entries(collectedFields || {});
+            const collectedHtml = collectedEntries.length > 0
+                ? `<dl class="fields-list">
+                    ${collectedEntries.map(([key, value]) => `
+                        <dt>${this.escapeHtml(key)}</dt>
+                        <dd>${this.escapeHtml(String(value))}</dd>
+                    `).join('')}
+                </dl>`
+                : '<p class="text-muted">No information collected yet.</p>';
+
+            // Build missing fields HTML
+            const missingHtml = (missingFields && missingFields.length > 0)
+                ? `<div class="missing-fields">
+                    <h4>Still needed:</h4>
+                    <ul>
+                        ${missingFields.map(field => `<li>${this.escapeHtml(field)}</li>`).join('')}
+                    </ul>
+                </div>`
+                : '';
+
+            container.innerHTML = `
+                <h3>Collected Information</h3>
+                ${collectedHtml}
+                ${missingHtml}
+            `;
+        },
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     };
 
