@@ -276,6 +276,14 @@
 
             feed.insertBefore(item, feed.firstChild);
 
+            // Auto-clear old items (keep only last 10)
+            const items = feed.querySelectorAll('.activity-item');
+            if (items.length > 10) {
+                for (let i = 10; i < items.length; i++) {
+                    items[i].remove();
+                }
+            }
+
             // Auto-remove after duration (if specified)
             if (duration) {
                 setTimeout(() => {
