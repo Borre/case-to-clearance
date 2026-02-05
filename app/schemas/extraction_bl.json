@@ -1,19 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "extraction_bl.json",
-  "title": "Bill of Lading Field Extraction",
-  "description": "Schema for structured field extraction from bills of lading",
+  "title": "Bill of Lading Field Extraction (LLM Output)",
+  "description": "Schema for structured field extraction from bills of lading returned by the LLM",
   "type": "object",
   "properties": {
-    "doc_id": {
-      "type": "string",
-      "description": "Document identifier"
-    },
-    "doc_type": {
-      "type": "string",
-      "enum": ["bl", "bill_of_lading"],
-      "description": "Document type"
-    },
     "fields": {
       "type": "object",
       "description": "Extracted fields from the bill of lading",
@@ -21,6 +12,10 @@
         "bl_number": {
           "type": "string",
           "description": "Bill of lading number"
+        },
+        "bl_date": {
+          "type": "string",
+          "description": "Bill of lading date"
         },
         "carrier_name": {
           "type": "string",
@@ -58,34 +53,13 @@
           "type": "string",
           "description": "Party to be notified"
         },
-        "bl_date": {
+        "cargo_description": {
           "type": "string",
-          "description": "Bill of lading date"
+          "description": "Brief description of goods"
         },
         "gross_weight": {
-          "type": "number",
-          "description": "Gross weight of shipment"
-        },
-        "weight_unit": {
-          "type": "string",
-          "description": "Weight unit (e.g., kg, lb)"
-        },
-        "number_of_packages": {
-          "type": "number",
-          "description": "Total number of packages"
-        },
-        "package_type": {
-          "type": "string",
-          "description": "Type of packaging (e.g., cartons, pallets)"
-        },
-        "freight_charges": {
-          "type": "string",
-          "description": "Freight payment terms (e.g., Prepaid, Collect)"
-        },
-        "container_numbers": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Container numbers"
+          "type": ["number", "string"],
+          "description": "Weight with units"
         }
       }
     },
@@ -111,5 +85,5 @@
       "description": "When the extraction was performed"
     }
   },
-  "required": ["doc_id", "doc_type", "fields", "confidence"]
+  "required": ["fields", "confidence"]
 }

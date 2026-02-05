@@ -8,6 +8,8 @@ services:
     container_name: case-to-clearance
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       # Huawei Cloud MaaS Configuration
       - MAAS_API_KEY=${MAAS_API_KEY:-}

@@ -1,19 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "extraction_invoice.json",
-  "title": "Invoice Field Extraction",
-  "description": "Schema for structured field extraction from commercial invoices",
+  "title": "Invoice Field Extraction (LLM Output)",
+  "description": "Schema for structured field extraction from commercial invoices returned by the LLM",
   "type": "object",
   "properties": {
-    "doc_id": {
-      "type": "string",
-      "description": "Document identifier"
-    },
-    "doc_type": {
-      "type": "string",
-      "enum": ["invoice"],
-      "description": "Document type"
-    },
     "fields": {
       "type": "object",
       "description": "Extracted fields from the invoice",
@@ -26,58 +17,34 @@
           "type": "string",
           "description": "Invoice date (ISO format or common format)"
         },
-        "seller_name": {
+        "supplier_name": {
           "type": "string",
-          "description": "Name of the seller/exporter"
-        },
-        "seller_address": {
-          "type": "string",
-          "description": "Address of the seller"
+          "description": "Name of the supplier/seller"
         },
         "buyer_name": {
           "type": "string",
           "description": "Name of the buyer/importer"
         },
-        "buyer_address": {
-          "type": "string",
-          "description": "Address of the buyer"
-        },
         "total_amount": {
-          "type": "number",
+          "type": ["number", "string"],
           "description": "Total invoice amount"
         },
         "currency": {
           "type": "string",
           "description": "Currency code (e.g., USD, EUR)"
         },
-        "description_of_goods": {
+        "shipment_id": {
           "type": "string",
-          "description": "Description of goods/services"
+          "description": "Shipment reference or B/L number if present"
         },
         "hs_codes": {
           "type": "array",
           "items": { "type": "string" },
           "description": "HS codes for the goods"
         },
-        "quantity": {
-          "type": "number",
-          "description": "Total quantity"
-        },
-        "unit_of_measure": {
+        "line_items": {
           "type": "string",
-          "description": "Unit of measure (e.g., kg, pcs)"
-        },
-        "unit_price": {
-          "type": "number",
-          "description": "Price per unit"
-        },
-        "payment_terms": {
-          "type": "string",
-          "description": "Payment terms (e.g., NET 30)"
-        },
-        "incoterm": {
-          "type": "string",
-          "description": "International commerce term (e.g., FOB, CIF)"
+          "description": "Summary of items (count, description)"
         }
       }
     },
@@ -103,5 +70,5 @@
       "description": "When the extraction was performed"
     }
   },
-  "required": ["doc_id", "doc_type", "fields", "confidence"]
+  "required": ["fields", "confidence"]
 }

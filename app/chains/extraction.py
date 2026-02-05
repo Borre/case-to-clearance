@@ -2,7 +2,6 @@
 
 import json
 import logging
-import uuid
 from datetime import datetime, timezone
 from typing import Any
 
@@ -14,6 +13,8 @@ from app.chains.prompts import (
     PACKING_LIST_EXTRACTION_SYSTEM,
 )
 from app.config import settings
+from app.chains.json_fix import get_json_fix_chain
+from app.guardrails import NumberChecker, OutputValidator
 from app.huawei.maas import get_maas_client
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,57 @@ class ExtractionChain:
     def __init__(self) -> None:
         """Initialize the extraction chain."""
         self.maas = get_maas_client()
+        self.output_validator = OutputValidator()
+        self.json_fixer = get_json_fix_chain()
+        self.number_checker = NumberChecker()
+
+    def _schema_name_for_doc_type(self, doc_type: str) -> str | None:
+        """Map document type to schema name."""
+        doc_type_key = doc_type.lower().replace("-", "_").replace("/", "_")
+        return {
+            "invoice": "extraction_invoice",
+            "commercial_invoice": "extraction_invoice",
+            "bill_of_lading": "extraction_bl",
+            "bl": "extraction_bl",
+            "packing_list": "extraction_packing_list",
+            "pl": "extraction_packing_list",
+            "declaration": "extraction_declaration",
+            "customs_declaration": "extraction_declaration",
+            "export_declaration": "extraction_declaration",
+        }.get(doc_type_key)
+
+    async def _parse_extraction(
+        self, raw_output: str, schema_name: str | None
+    ) -> dict[str, Any] | None:
+        """Parse and validate extraction output with guardrails."""
+        if not schema_name:
+            try:
+                return json.loads(raw_output)
+            except json.JSONDecodeError:
+                return None
+
+        is_valid, data, error = self.output_validator.validate_json(
+            raw_output, schema_name=schema_name
+        )
+        if is_valid and data is not None:
+            return data
+
+        if error:
+            try:
+                fixed = await self.json_fixer.fix_json(
+                    invalid_json=raw_output,
+                    error_message=error,
+                    expected_schema=self.output_validator.schemas.get(schema_name),
+                )
+                is_valid, data, error = self.output_validator.validate_json(
+                    fixed, schema_name=schema_name
+                )
+                if is_valid and data is not None:
+                    return data
+            except Exception as e:
+                logger.error(f"Failed to repair extraction JSON: {e}")
+
+        return None
 
     async def classify_document(self, ocr_text: str, filename: str) -> dict[str, Any]:
         """Classify the document type from OCR text.
@@ -147,16 +199,26 @@ class ExtractionChain:
             temperature=0.1,
         )
 
-        try:
-            data = json.loads(response["content"])
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse {doc_type} extraction JSON")
+        schema_name = self._schema_name_for_doc_type(doc_type)
+        data = await self._parse_extraction(response["content"], schema_name)
+        if data is None:
+            logger.error(f"Failed to parse {doc_type} extraction JSON after guardrails")
             data = {
                 "fields": {},
                 "confidence": 0.0,
                 "low_confidence_fields": [],
                 "missing_fields": [],
             }
+
+        # Number audit against OCR text
+        is_valid, issues = self.number_checker.verify_extraction_numbers(data, ocr_text)
+        if not is_valid:
+            logger.warning(f"Number audit failed for {doc_type}: {issues}")
+            low_conf = data.get("low_confidence_fields", [])
+            if "number_audit_mismatch" not in low_conf:
+                low_conf.append("number_audit_mismatch")
+            data["low_confidence_fields"] = low_conf
+            data["confidence"] = min(float(data.get("confidence", 0.0)), 0.3)
 
         return {
             "doc_id": doc_id,

@@ -1,6 +1,5 @@
 """Citizen intake chain for procedure classification and slot-filling."""
 
-import json
 import logging
 from typing import Any
 
@@ -12,6 +11,8 @@ from app.chains.prompts import (
     PROCEDURE_CLASSIFICATION_SYSTEM,
 )
 from app.config import settings
+from app.chains.json_fix import get_json_fix_chain
+from app.guardrails import OutputValidator
 from app.huawei.maas import get_maas_client
 from app.storage import CaseFile
 from app.data import PROCEDURES
@@ -27,12 +28,41 @@ class IntakeChain:
         self.maas = get_maas_client()
         self.procedures = PROCEDURES["procedures"]
         self.field_prompts = PROCEDURES.get("field_prompts", {})
+        self.output_validator = OutputValidator()
+        self.json_fixer = get_json_fix_chain()
 
     def _get_procedure_by_id(self, procedure_id: str) -> dict | None:
         """Get procedure by ID."""
         for proc in self.procedures:
             if proc["id"] == procedure_id:
                 return proc
+        return None
+
+    async def _parse_classification(
+        self, raw_output: str
+    ) -> dict[str, Any] | None:
+        """Parse and validate classification output with guardrails."""
+        is_valid, data, error = self.output_validator.validate_json(
+            raw_output, schema_name="intake_output"
+        )
+        if is_valid and data is not None:
+            return data
+
+        if error:
+            try:
+                fixed = await self.json_fixer.fix_json(
+                    invalid_json=raw_output,
+                    error_message=error,
+                    expected_schema=self.output_validator.schemas.get("intake_output"),
+                )
+                is_valid, data, error = self.output_validator.validate_json(
+                    fixed, schema_name="intake_output"
+                )
+                if is_valid and data is not None:
+                    return data
+            except Exception as e:
+                logger.error(f"Failed to repair intake JSON: {e}")
+
         return None
 
     async def classify_and_collect(
@@ -94,23 +124,34 @@ class IntakeChain:
             temperature=0.3,
         )
 
-        # Parse the response
-        try:
-            classification = json.loads(response["content"])
-        except json.JSONDecodeError:
-            logger.error("Failed to parse classification JSON")
+        # Parse and validate the response
+        classification = await self._parse_classification(response["content"])
+        if classification is None:
+            logger.error("Failed to parse classification JSON after guardrails")
             classification = {
                 "procedure_id": None,
+                "procedure_name": None,
                 "confidence": 0.0,
                 "rationale": "Error parsing response",
                 "detected_fields": {},
                 "missing_fields": [],
             }
 
+        valid_ids = [p["id"] for p in self.procedures]
+        is_valid, error_msg = self.output_validator.validate_procedure_classification(
+            classification, valid_ids
+        )
+        if not is_valid:
+            logger.warning(f"Invalid procedure classification: {error_msg}")
+            classification["procedure_id"] = None
+
         # Generate response
         if classification.get("procedure_id"):
             procedure = self._get_procedure_by_id(classification["procedure_id"])
-            procedure_name = procedure["name"] if procedure else classification["procedure_id"]
+            procedure_name = (
+                classification.get("procedure_name")
+                or (procedure["name"] if procedure else classification["procedure_id"])
+            )
 
             if classification.get("missing_fields"):
                 # Need more info

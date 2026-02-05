@@ -6,7 +6,9 @@ import re
 from typing import Any
 
 from app.chains.prompts import RISK_EXPLANATION_SYSTEM
+from app.chains.json_fix import get_json_fix_chain
 from app.config import settings
+from app.guardrails import NumberChecker, OutputValidator
 from app.huawei.maas import get_maas_client
 from app.rules.scoring import RiskScoreResult
 
@@ -19,6 +21,9 @@ class TriageChain:
     def __init__(self) -> None:
         """Initialize the triage chain."""
         self.maas = get_maas_client()
+        self.output_validator = OutputValidator()
+        self.json_fixer = get_json_fix_chain()
+        self.number_checker = NumberChecker()
 
     async def generate_explanation(
         self,
@@ -59,16 +64,47 @@ class TriageChain:
             temperature=0.7,
         )
 
-        try:
-            explanation = json.loads(response["content"])
-        except json.JSONDecodeError:
-            logger.error("Failed to parse explanation JSON")
+        explanation = await self._parse_explanation(response["content"])
+        if explanation is None:
+            logger.error("Failed to parse explanation JSON after guardrails")
             explanation = self._get_fallback_explanation(score_result)
 
-        # Verify numbers in explanation
-        explanation = self._verify_numbers(explanation, score_result)
+        # Verify numbers in explanation (fallback if mismatch)
+        score_dict = score_result.to_dict()
+        score_dict["factors"] = score_result.factors
+        numbers_ok, issues = self.number_checker.verify_risk_score_numbers(
+            explanation, score_dict
+        )
+        if not numbers_ok:
+            logger.warning(f"Number audit failed for explanation: {issues}")
+            explanation = self._get_fallback_explanation(score_result)
 
         return explanation
+
+    async def _parse_explanation(self, raw_output: str) -> dict[str, Any] | None:
+        """Parse and validate explanation output with guardrails."""
+        is_valid, data, error = self.output_validator.validate_json(
+            raw_output, schema_name="triage_explanation"
+        )
+        if is_valid and data is not None:
+            return data
+
+        if error:
+            try:
+                fixed = await self.json_fixer.fix_json(
+                    invalid_json=raw_output,
+                    error_message=error,
+                    expected_schema=self.output_validator.schemas.get("triage_explanation"),
+                )
+                is_valid, data, error = self.output_validator.validate_json(
+                    fixed, schema_name="triage_explanation"
+                )
+                if is_valid and data is not None:
+                    return data
+            except Exception as e:
+                logger.error(f"Failed to repair triage JSON: {e}")
+
+        return None
 
     def _verify_numbers(
         self, explanation: dict[str, Any], score_result: RiskScoreResult

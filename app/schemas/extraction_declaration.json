@@ -1,19 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "extraction_declaration.json",
-  "title": "Customs Declaration Field Extraction",
-  "description": "Schema for structured field extraction from customs declarations",
+  "title": "Customs Declaration Field Extraction (LLM Output)",
+  "description": "Schema for structured field extraction from customs declarations returned by the LLM",
   "type": "object",
   "properties": {
-    "doc_id": {
-      "type": "string",
-      "description": "Document identifier"
-    },
-    "doc_type": {
-      "type": "string",
-      "enum": ["declaration", "customs_declaration"],
-      "description": "Document type"
-    },
     "fields": {
       "type": "object",
       "description": "Extracted fields from the customs declaration",
@@ -26,66 +17,51 @@
           "type": "string",
           "description": "Declaration filing date"
         },
-        "importer_name": {
+        "declarant_name": {
           "type": "string",
-          "description": "Name of the importer"
+          "description": "Name of declarant/importer"
         },
-        "importer_tax_id": {
+        "tax_id": {
           "type": "string",
-          "description": "Importer's tax identification number"
+          "description": "Tax ID / RUC / NIT"
         },
-        "customs_office": {
+        "procedure_code": {
           "type": "string",
-          "description": "Customs office of entry"
-        },
-        "port_of_entry": {
-          "type": "string",
-          "description": "Port of entry"
+          "description": "Customs procedure code"
         },
         "declared_value": {
-          "type": "number",
+          "type": ["number", "string"],
           "description": "Declared customs value"
         },
         "currency": {
           "type": "string",
           "description": "Currency of declared value"
         },
+        "origin_countries": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Countries of origin"
+        },
         "hs_codes": {
           "type": "array",
           "items": { "type": "string" },
           "description": "HS codes for declared goods"
         },
-        "country_of_origin": {
+        "goods_description": {
           "type": "string",
-          "description": "Country where goods originated"
+          "description": "Description of goods"
         },
-        "description_of_goods": {
+        "warehouse": {
           "type": "string",
-          "description": "Description of declared goods"
-        },
-        "quantity": {
-          "type": "number",
-          "description": "Declared quantity"
-        },
-        "unit_of_measure": {
-          "type": "string",
-          "description": "Unit of measure"
-        },
-        "duty_amount": {
-          "type": "number",
-          "description": "Calculated duty amount"
-        },
-        "tax_amount": {
-          "type": "number",
-          "description": "Calculated tax amount"
-        },
-        "declaration_type": {
-          "type": "string",
-          "description": "Type of declaration (e.g., consumption, temporary)"
+          "description": "Warehouse or customs post"
         },
         "shipment_id": {
           "type": "string",
           "description": "Shipment identifier"
+        },
+        "bl_number": {
+          "type": "string",
+          "description": "Bill of lading number"
         }
       }
     },
@@ -111,5 +87,5 @@
       "description": "When the extraction was performed"
     }
   },
-  "required": ["doc_id", "doc_type", "fields", "confidence"]
+  "required": ["fields", "confidence"]
 }

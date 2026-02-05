@@ -1,24 +1,18 @@
 """FastAPI application for Case-to-Clearance demo."""
 
-import asyncio
-import logging
-import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, UploadFile, Form, File, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.chains.extraction import get_extraction_chain
-from app.chains.intake import get_intake_chain
-from app.chains.triage import get_triage_chain
+from app.chains.workflow import run_workflow
 from app.config import settings
-from app.huawei.ocr import get_ocr_client
-from app.observability.tracer import app_logger, log_trace
+from app.observability.tracer import app_logger
 from app.storage import CaseFile, storage
 
 # ============================================================================
@@ -143,51 +137,18 @@ async def get_case(case_id: str) -> dict[str, Any]:
 @app.post("/api/case/{case_id}/chat")
 async def chat(case_id: str, message: str = Form(...)) -> dict[str, Any]:
     """Send a chat message and get response."""
-    case = storage.load(case_id)
-    if not case:
+    if not storage.exists(case_id):
         raise HTTPException(status_code=404, detail="Case not found")
 
-    # Add user message
-    case.add_message("user", message)
-
-    # Process with intake chain
-    intake_chain = get_intake_chain()
-    result = await intake_chain.classify_and_collect(case, message)
-
-    # Update case with results
-    if result.get("procedure"):
-        case.procedure = result["procedure"]
-
-    if result.get("detected_fields"):
-        collected = case.citizen_intake.get("collected_fields", {})
-        collected.update(result.get("detected_fields", {}))
-        case.citizen_intake["collected_fields"] = collected
-
-    if result.get("missing_fields") is not None:
-        case.citizen_intake["missing_fields"] = result["missing_fields"]
-
-    # Add assistant response
-    assistant_message = result.get("response", "I'm sorry, I couldn't process that request.")
-    case.add_message("assistant", assistant_message)
-
-    # Add trace
-    case.add_trace(
-        stage="citizen_intake",
-        model_used=settings.maas_model_reasoner,
-        inputs_summary=f"message_length={len(message)}",
-        outputs_summary=f"procedure={case.procedure.get('id')}, missing_fields={len(case.citizen_intake.get('missing_fields', []))}",
+    state = await run_workflow(
+        case_id=case_id,
+        steps={"intake": True},
+        message=message,
     )
-
-    # Save case
-    storage.save(case)
-
-    log_trace(
-        app_logger,
-        case_id,
-        "citizen_intake",
-        settings.maas_model_reasoner,
-        f"message_length={len(message)}",
-        f"procedure={result.get('procedure', {}).get('id')}",
+    case = state["case"]
+    result = state.get("intake_result", {})
+    assistant_message = result.get(
+        "response", "I'm sorry, I couldn't process that request."
     )
 
     return {
@@ -262,41 +223,10 @@ async def upload_documents(case_id: str, files: list[UploadFile] = File(...)) ->
 @app.post("/api/case/{case_id}/docs/run_ocr")
 async def run_ocr(case_id: str) -> dict[str, Any]:
     """Run OCR on uploaded documents."""
-    case = storage.load(case_id)
-    if not case:
+    if not storage.exists(case_id):
         raise HTTPException(status_code=404, detail="Case not found")
-
-    ocr_client = get_ocr_client()
-    case_dir = Path(settings.app_env).joinpath("runs", case_id)
-
-    ocr_results = []
-
-    for file_info in case.documents.get("files", []):
-        doc_id = file_info["doc_id"]
-        file_path = case_dir.joinpath(file_info["path"])
-
-        if not file_path.exists():
-            continue
-
-        # Read file
-        with file_path.open("rb") as f:
-            file_bytes = f.read()
-
-        # Run OCR
-        result = await ocr_client.extract_text(
-            file_bytes=file_bytes,
-            filename=file_info["filename"],
-            mime_type=file_info["mime"],
-        )
-
-        # Ensure doc_id matches
-        result["doc_id"] = doc_id
-        case.documents["ocr"].append(result)
-        ocr_results.append(result)
-
-    storage.save(case)
-
-    app_logger.info(f"OCR completed for {len(ocr_results)} documents in case {case_id}")
+    state = await run_workflow(case_id=case_id, steps={"ocr": True})
+    ocr_results = state.get("ocr_results", [])
 
     return {
         "case_id": case_id,
@@ -308,50 +238,11 @@ async def run_ocr(case_id: str) -> dict[str, Any]:
 @app.post("/api/case/{case_id}/docs/extract_validate")
 async def extract_and_validate(case_id: str) -> dict[str, Any]:
     """Extract fields and run validations."""
-    case = storage.load(case_id)
-    if not case:
+    if not storage.exists(case_id):
         raise HTTPException(status_code=404, detail="Case not found")
-
-    extraction_chain = get_extraction_chain()
-    procedure_id = case.procedure.get("id", "import-regular")
-
-    # Clear previous extractions and validations
-    case.documents["extractions"] = []
-    case.documents["validations"] = []
-
-    # Extract from each OCR result
-    for ocr_result in case.documents.get("ocr", []):
-        doc_id = ocr_result["doc_id"]
-        ocr_text = ocr_result.get("text", "")
-
-        # Classify document type
-        filename = ocr_result.get("meta", {}).get("filename", "")
-        classification = await extraction_chain.classify_document(ocr_text, filename)
-        doc_type = classification.get("doc_type", "other")
-
-        # Extract fields
-        extraction = await extraction_chain.extract_by_type(ocr_text, doc_type, doc_id)
-        extraction["doc_type"] = doc_type  # Ensure doc_type is set
-        case.documents["extractions"].append(extraction)
-
-    # Run validations
-    from app.rules.validations import get_validation_engine
-
-    validation_engine = get_validation_engine()
-    validations = await validation_engine.validate_all(
-        case,
-        case.documents.get("extractions", []),
-        procedure_id,
-    )
-    case.documents["validations"] = validations
-
-    storage.save(case)
-
-    app_logger.info(
-        f"Extraction and validation completed for case {case_id}: "
-        f"{len(case.documents['extractions'])} extractions, "
-        f"{len(validations)} validations"
-    )
+    state = await run_workflow(case_id=case_id, steps={"extract_validate": True})
+    case = state["case"]
+    validations = state.get("validations", [])
 
     return {
         "case_id": case_id,
@@ -374,49 +265,10 @@ async def extract_and_validate(case_id: str) -> dict[str, Any]:
 @app.post("/api/case/{case_id}/risk/run")
 async def run_risk_assessment(case_id: str) -> dict[str, Any]:
     """Compute risk score and generate explanation."""
-    case = storage.load(case_id)
-    if not case:
+    if not storage.exists(case_id):
         raise HTTPException(status_code=404, detail="Case not found")
-
-    triage_chain = get_triage_chain()
-    procedure_id = case.procedure.get("id", "import-regular")
-
-    result = await triage_chain.process_risk_assessment(
-        case=case,
-        validations=case.documents.get("validations", []),
-        extractions=case.documents.get("extractions", []),
-        procedure_id=procedure_id,
-    )
-
-    # Update case with risk results
-    case.initialize_risk()
-    case.risk = {
-        "score": result["score"],
-        "level": result["level"],
-        "factors": result["factors"],
-        "explanation": result["explanation"],
-        "confidence": result.get("confidence", "HIGH"),
-        "review_required": result.get("review_required", False),
-    }
-
-    # Add trace
-    case.add_trace(
-        stage="risk_assessment",
-        model_used=settings.maas_model_writer,
-        inputs_summary=f"extractions={len(case.documents.get('extractions', []))}, validations={len(case.documents.get('validations', []))}",
-        outputs_summary=f"score={result['score']}, level={result['level']}, factors={len(result['factors'])}",
-    )
-
-    storage.save(case)
-
-    log_trace(
-        app_logger,
-        case_id,
-        "risk_assessment",
-        settings.maas_model_writer,
-        f"extractions={len(case.documents.get('extractions', []))}",
-        f"score={result['score']}, level={result['level']}",
-    )
+    state = await run_workflow(case_id=case_id, steps={"risk": True})
+    result = state["case"].risk
 
     return {
         "case_id": case_id,

@@ -1,19 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "extraction_packing_list.json",
-  "title": "Packing List Field Extraction",
-  "description": "Schema for structured field extraction from packing lists",
+  "title": "Packing List Field Extraction (LLM Output)",
+  "description": "Schema for structured field extraction from packing lists returned by the LLM",
   "type": "object",
   "properties": {
-    "doc_id": {
-      "type": "string",
-      "description": "Document identifier"
-    },
-    "doc_type": {
-      "type": "string",
-      "enum": ["packing_list", "pl"],
-      "description": "Document type"
-    },
     "fields": {
       "type": "object",
       "description": "Extracted fields from the packing list",
@@ -21,10 +12,6 @@
         "pl_number": {
           "type": "string",
           "description": "Packing list number"
-        },
-        "invoice_number": {
-          "type": "string",
-          "description": "Related invoice number"
         },
         "shipper_name": {
           "type": "string",
@@ -39,43 +26,28 @@
           "description": "Packing list date"
         },
         "total_packages": {
-          "type": "number",
+          "type": ["number", "string"],
           "description": "Total number of packages"
         },
-        "total_weight": {
-          "type": "number",
-          "description": "Total weight"
-        },
-        "weight_unit": {
+        "package_type": {
           "type": "string",
-          "description": "Weight unit (e.g., kg, lb)"
+          "description": "Type of packaging"
+        },
+        "total_weight": {
+          "type": ["number", "string"],
+          "description": "Total weight with units"
         },
         "total_volume": {
-          "type": "number",
-          "description": "Total volume"
+          "type": ["number", "string"],
+          "description": "Total volume with units"
         },
-        "volume_unit": {
+        "marks_numbers": {
           "type": "string",
-          "description": "Volume unit (e.g., cbm, cuft)"
+          "description": "Shipping marks"
         },
-        "marks_and_numbers": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Shipping marks and numbers"
-        },
-        "items": {
-          "type": "array",
-          "description": "List of packed items",
-          "items": {
-            "type": "object",
-            "properties": {
-              "description": { "type": "string" },
-              "quantity": { "type": "number" },
-              "unit": { "type": "string" },
-              "weight": { "type": "number" },
-              "volume": { "type": "number" }
-            }
-          }
+        "item_summary": {
+          "type": "string",
+          "description": "Brief summary of items"
         }
       }
     },
@@ -101,5 +73,5 @@
       "description": "When the extraction was performed"
     }
   },
-  "required": ["doc_id", "doc_type", "fields", "confidence"]
+  "required": ["fields", "confidence"]
 }

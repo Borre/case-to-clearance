@@ -369,7 +369,7 @@ Results are saved to `test_results/`:
 
 ```bash
 # Install dev dependencies
-pip install -r requirements-dev.txt
+pip install .[dev]
 
 # Run with coverage
 pytest tests/ --cov=app --cov-report=html

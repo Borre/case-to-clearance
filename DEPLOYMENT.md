@@ -19,6 +19,8 @@ cp .env.example .env
 # Edit .env with your Huawei Cloud credentials
 ```
 
+For production, prefer injecting secrets via your platform (Docker secrets, CI/CD vaults, or managed secret stores) and keep `.env` out of source control.
+
 ### 2. Start the Application
 
 ```bash
