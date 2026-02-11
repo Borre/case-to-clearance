@@ -3,7 +3,19 @@
 {% block title %}Case {{ case_id }} - Case-to-Clearance{% endblock %}
 
 {% block content %}
-<div class="case-view">
+{% set initial_stage = 'intake' %}
+{% if case.risk and case.risk.score is defined %}
+    {% set initial_stage = 'risk' %}
+{% elif case.documents and case.documents.files %}
+    {% set initial_stage = 'documents' %}
+{% endif %}
+{% set initial_tab = 'citizen' %}
+{% if initial_stage == 'documents' %}
+    {% set initial_tab = 'documents' %}
+{% elif initial_stage == 'risk' %}
+    {% set initial_tab = 'risk' %}
+{% endif %}
+<div class="case-view" data-initial-stage="{{ initial_stage }}">
     <!-- Case Header -->
     <div class="case-header">
         <div class="case-info">
@@ -21,36 +33,44 @@
         <div class="wizard-header">
             <span class="wizard-step-counter">
                 <span class="usa-sr-only">Step</span>
-                <span class="wizard-current-step">1</span>
+                <span class="wizard-current-step">{{ 3 if initial_stage == 'risk' else (2 if initial_stage == 'documents' else 1) }}</span>
                 <span class="wizard-total-steps">of 3</span>
             </span>
-            <h4 class="wizard-heading-text">Describe your customs request</h4>
+            <h4 class="wizard-heading-text">
+                {% if initial_stage == 'risk' %}
+                    Review risk assessment
+                {% elif initial_stage == 'documents' %}
+                    Upload required documents
+                {% else %}
+                    Describe your customs request
+                {% endif %}
+            </h4>
         </div>
 
         <ol class="wizard-steps">
-            <li class="wizard-step completed" data-step="intake">
+            <li class="wizard-step{% if initial_stage in ['documents', 'risk'] %} completed{% elif initial_stage == 'intake' %} current{% endif %}"{% if initial_stage == 'intake' %} aria-current="true"{% endif %} data-step="intake">
                 <span class="step-indicator">
                     <span class="usa-sr-only">Step</span>
                     <span class="step-number">1</span>
                 </span>
                 <span class="step-label">
-                    Chat <span class="usa-sr-only">completed</span>
+                    Chat <span class="usa-sr-only">{% if initial_stage in ['documents', 'risk'] %}completed{% elif initial_stage == 'intake' %}current{% else %}not completed{% endif %}</span>
                 </span>
             </li>
-            <li class="wizard-step current" aria-current="true" data-step="documents">
+            <li class="wizard-step{% if initial_stage == 'risk' %} completed{% elif initial_stage == 'documents' %} current{% endif %}"{% if initial_stage == 'documents' %} aria-current="true"{% endif %} data-step="documents">
                 <span class="step-indicator">
                     <span class="usa-sr-only">Step</span>
                     <span class="step-number">2</span>
                 </span>
-                <span class="step-label">Documents</span>
+                <span class="step-label">Documents <span class="usa-sr-only">{% if initial_stage == 'risk' %}completed{% elif initial_stage == 'documents' %}current{% else %}not completed{% endif %}</span></span>
             </li>
-            <li class="wizard-step" data-step="risk">
+            <li class="wizard-step{% if initial_stage == 'risk' %} current{% endif %}"{% if initial_stage == 'risk' %} aria-current="true"{% endif %} data-step="risk">
                 <span class="step-indicator">
                     <span class="usa-sr-only">Step</span>
                     <span class="step-number">3</span>
                 </span>
                 <span class="step-label">
-                    Risk Assessment <span class="usa-sr-only">not completed</span>
+                    Risk Assessment <span class="usa-sr-only">{% if initial_stage == 'risk' %}current{% else %}not completed{% endif %}</span>
                 </span>
             </li>
         </ol>
@@ -58,7 +78,7 @@
 
     <!-- Step Instructions - Dynamic based on current step -->
     <div class="step-instructions" id="step-instructions">
-        <div class="instruction-card" data-step="intake" data-step-number="1">
+        <div class="instruction-card" data-step="intake" {% if initial_stage != 'intake' %}style="display:none;"{% endif %} data-step-number="1">
             <h5>Describe Your Customs Request</h5>
             <p>Tell us what you're importing and from where. Our assistant will gather the necessary information to process your clearance.</p>
             <div class="instruction-tips">
@@ -70,7 +90,7 @@
             </div>
         </div>
 
-        <div class="instruction-card" data-step="documents" style="display:none;" data-step-number="2">
+        <div class="instruction-card" data-step="documents" {% if initial_stage != 'documents' %}style="display:none;"{% endif %} data-step-number="2">
             <h5>Upload Required Documents</h5>
             <p>Upload your commercial invoice, bill of lading, packing list, and any other required documents for processing.</p>
             <div class="instruction-tips">
@@ -85,7 +105,7 @@
             </div>
         </div>
 
-        <div class="instruction-card" data-step="risk" style="display:none;" data-step-number="3">
+        <div class="instruction-card" data-step="risk" {% if initial_stage != 'risk' %}style="display:none;"{% endif %} data-step-number="3">
             <h5>Risk Assessment</h5>
             <p>We'll analyze your documents and provide a comprehensive risk score with detailed recommendations for clearance.</p>
             <div class="instruction-tips">
@@ -111,15 +131,15 @@
 
     <!-- Tabs Navigation -->
     <div class="tabs" role="tablist">
-        <button class="tab-btn active" data-tab="citizen" role="tab">
+        <button class="tab-btn{% if initial_tab == 'citizen' %} active{% endif %}" data-tab="citizen" role="tab" aria-controls="tab-citizen" aria-selected="{{ 'true' if initial_tab == 'citizen' else 'false' }}">
             <span class="tab-icon">💬</span>
             Citizen
         </button>
-        <button class="tab-btn" data-tab="documents" role="tab">
+        <button class="tab-btn{% if initial_tab == 'documents' %} active{% endif %}" data-tab="documents" role="tab" aria-controls="tab-documents" aria-selected="{{ 'true' if initial_tab == 'documents' else 'false' }}">
             <span class="tab-icon">📄</span>
             Documents
         </button>
-        <button class="tab-btn" data-tab="risk" role="tab">
+        <button class="tab-btn{% if initial_tab == 'risk' %} active{% endif %}" data-tab="risk" role="tab" aria-controls="tab-risk" aria-selected="{{ 'true' if initial_tab == 'risk' else 'false' }}">
             <span class="tab-icon">📊</span>
             Risk
         </button>
@@ -128,7 +148,7 @@
     <!-- Tab Content -->
     <div class="tab-content">
         <!-- Citizen Tab -->
-        <div id="tab-citizen" class="tab-pane active">
+        <div id="tab-citizen" class="tab-pane{% if initial_tab == 'citizen' %} active{% endif %}">
             <div class="citizen-tab">
                 <!-- Procedure Info -->
                 <div class="procedure-card" id="procedure-card">
@@ -207,12 +227,12 @@
         </div>
 
         <!-- Documents Tab -->
-        <div id="tab-documents" class="tab-pane">
+        <div id="tab-documents" class="tab-pane{% if initial_tab == 'documents' %} active{% endif %}">
             <div class="documents-tab">
                 <!-- Upload Section -->
-                <div class="upload-card">
+                <div id="upload-section" class="upload-card">
                     <h3>Upload Documents</h3>
-                    <form class="upload-form" onsubmit="return false;">
+                    <form id="upload-zone" class="upload-form" onsubmit="return false;">
                         <input type="file" id="file-input" name="files" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff" class="file-input">
                         <button type="submit" class="btn btn-primary">Upload Files</button>
                     </form>
@@ -296,11 +316,14 @@
                     </div>
                     {% endif %}
                 </div>
+
+                <div id="extractions-container"></div>
+                <div id="validations-container"></div>
             </div>
         </div>
 
         <!-- Risk Tab -->
-        <div id="tab-risk" class="tab-pane">
+        <div id="tab-risk" class="tab-pane{% if initial_tab == 'risk' %} active{% endif %}">
             <div class="risk-tab">
                 <!-- Run Risk Assessment -->
                 <div class="risk-actions">
@@ -398,21 +421,4 @@
         <pre><code>{{ case|tojson(indent=2) }}</code></pre>
     </details>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-// Tab switching
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Remove active from all tabs and buttons
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-
-        // Activate clicked tab
-        btn.classList.add('active');
-        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    });
-});
-</script>
 {% endblock %}

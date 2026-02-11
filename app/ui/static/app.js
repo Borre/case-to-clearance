@@ -132,8 +132,15 @@
 
             const response = await fetch(endpoint, options);
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error?.message || 'Request failed');
+                let errorMessage = 'Request failed';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.error?.message || error.detail || errorMessage;
+                } catch (_) {
+                    const text = await response.text();
+                    if (text) errorMessage = text;
+                }
+                throw new Error(errorMessage);
             }
             return response.json();
         },
@@ -212,10 +219,14 @@
 
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
-            notification.innerHTML = `
-                <span>${message}</span>
-                <button class="notification-close" onclick="this.parentElement.remove()">&times;</button>
-            `;
+            const text = document.createElement('span');
+            text.textContent = message;
+            const closeButton = document.createElement('button');
+            closeButton.className = 'notification-close';
+            closeButton.type = 'button';
+            closeButton.innerHTML = '&times;';
+            closeButton.addEventListener('click', () => notification.remove());
+            notification.append(text, closeButton);
 
             container.appendChild(notification);
 
@@ -407,9 +418,8 @@
         },
 
         formatMessage(content) {
-            // Simple formatting - convert newlines to breaks
-            // Use split/join instead of regex to avoid FastAPI escaping issues
-            return content.split('\n').join('<br>');
+            // Escape HTML before converting newlines to line breaks.
+            return this.escapeHtml(content).split('\n').join('<br>');
         },
 
         updateProcedureInfo(procedure) {
@@ -431,7 +441,11 @@
 
         showDocumentUploadPrompt() {
             UI.showNotification('Please upload the required documents to continue.', 'info');
-            document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
+            const uploadSection =
+                document.getElementById('upload-section') ||
+                document.getElementById('upload-zone') ||
+                document.getElementById('tab-documents');
+            uploadSection?.scrollIntoView({ behavior: 'smooth' });
         },
 
         updateCollectedFields(collectedFields, missingFields) {
@@ -612,7 +626,7 @@
 
             container.innerHTML = extractions.map(ext => `
                 <div class="extraction-card">
-                    <h5>${ext.doc_type}</h5>
+                    <h5>${this.escapeHtml(ext.doc_type)}</h5>
                     <div class="confidence">Confidence: ${(ext.confidence * 100).toFixed(0)}%</div>
                 </div>
             `).join('');
@@ -625,7 +639,7 @@
             container.innerHTML = validations.map(val => `
                 <div class="validation-item ${val.passed ? 'pass' : 'fail'}">
                     <span>${val.passed ? '✓' : '✗'}</span>
-                    <span>${val.message}</span>
+                    <span>${this.escapeHtml(val.message)}</span>
                 </div>
             `).join('');
         },
@@ -672,14 +686,20 @@
 
         switchToTab(tabName) {
             // Remove active from all tabs and buttons
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
 
             // Activate target tab
             const tabBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
             const tabPane = document.getElementById(`tab-${tabName}`);
 
-            if (tabBtn) tabBtn.classList.add('active');
+            if (tabBtn) {
+                tabBtn.classList.add('active');
+                tabBtn.setAttribute('aria-selected', 'true');
+            }
             if (tabPane) tabPane.classList.add('active');
 
             // Update wizard stage
@@ -733,6 +753,7 @@
 
             const level = (result.level || 'MEDIUM').toLowerCase();
             const score = result.score || 0;
+            const escapedLevel = this.escapeHtml(result.level || 'MEDIUM');
 
             // Build factors table rows
             const factorsRows = (result.factors || []).map(factor => `
@@ -782,7 +803,7 @@
                     <div class="risk-score-display">
                         <div class="score-gauge score-${level}">
                             <div class="score-value">${score}</div>
-                            <div class="score-label">${result.level || 'MEDIUM'}</div>
+                            <div class="score-label">${escapedLevel}</div>
                         </div>
                         <div class="score-scale">
                             <span class="scale-label low">Low</span>
@@ -915,6 +936,13 @@
             riskButton.addEventListener('click', () => Risk.runAssessment());
         }
 
+        // Tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                Documents.switchToTab(btn.dataset.tab);
+            });
+        });
+
         // New case button
         const newCaseButton = document.getElementById('new-case-btn');
         if (newCaseButton) {
@@ -942,8 +970,10 @@
         // Initialize event listeners
         initEventListeners();
 
-        // Set initial stage
-        AppState.updateStageIndicators();
+        // Set initial stage from server-provided state when available.
+        const caseView = document.querySelector('.case-view');
+        const initialStage = caseView?.dataset.initialStage || 'intake';
+        AppState.setStage(initialStage);
 
         // Expose to global scope for HTMX/onclick handlers
         window.App = {

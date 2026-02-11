@@ -49,6 +49,15 @@ class ValidationResult:
 class ValidationEngine:
     """Engine for running validation rules."""
 
+    DOC_TYPE_ALIASES = {
+        "invoice": "commercial_invoice",
+        "commercial_invoice": "commercial_invoice",
+        "declaration": "customs_declaration",
+        "customs_declaration": "customs_declaration",
+        "bl": "bill_of_lading",
+        "bill_of_lading": "bill_of_lading",
+    }
+
     def __init__(self) -> None:
         """Initialize the validation engine."""
         self.validations = {
@@ -107,7 +116,7 @@ class ValidationEngine:
         invoice_doc_id = None
 
         for ext in extractions:
-            if ext.get("doc_type") == "invoice":
+            if self._canonical_doc_type(ext.get("doc_type")) == "commercial_invoice":
                 invoice_total = ext.get("fields", {}).get("total_amount")
                 invoice_doc_id = ext.get("doc_id")
                 break
@@ -117,7 +126,7 @@ class ValidationEngine:
         declaration_doc_id = None
 
         for ext in extractions:
-            if ext.get("doc_type") in ("declaration", "customs_declaration"):
+            if self._canonical_doc_type(ext.get("doc_type")) == "customs_declaration":
                 declared_value = ext.get("fields", {}).get("declared_value")
                 declaration_doc_id = ext.get("doc_id")
                 break
@@ -150,7 +159,10 @@ class ValidationEngine:
             return ValidationResult(
                 rule_id="invoice_total_vs_declared_value",
                 severity="high",
-                message=f"Invoice total ({invoice_total}) differs from declared value ({declared_value}) by {diff_pct*100:.1f}%",
+                message=(
+                    f"Invoice total ({invoice_total}) differs from declared value "
+                    f"({declared_value}) by {diff_pct*100:g}%"
+                ),
                 evidence={
                     "invoice_total": invoice_total,
                     "declared_value": declared_value,
@@ -213,7 +225,7 @@ class ValidationEngine:
         return ValidationResult(
             rule_id="shipment_id_consistency",
             severity="high",
-            message=f"Multiple different shipment IDs found across documents: {list(shipment_ids.keys())}",
+            message=f"Inconsistent shipment IDs found across documents: {list(shipment_ids.keys())}",
             evidence={"shipment_ids": shipment_ids},
             passed=False,
         )
@@ -362,12 +374,14 @@ class ValidationEngine:
         procedure_docs = REQUIRED_DOCS.get(procedure_id, {})
         required_doc_types = procedure_docs.get("required", [])
 
-        # Map document types
-        doc_types_found = {ext.get("doc_type") for ext in extractions}
+        # Normalize document types before matching required docs.
+        doc_types_found = {
+            self._canonical_doc_type(ext.get("doc_type")) for ext in extractions if ext.get("doc_type")
+        }
 
         missing = []
         for req in required_doc_types:
-            req_type = req.get("doc_type")
+            req_type = self._canonical_doc_type(req.get("doc_type"))
             if req_type not in doc_types_found:
                 missing.append(req.get("description", req_type))
 
@@ -433,7 +447,13 @@ class ValidationEngine:
             message=f"Multiple HS codes found: {list(all_hs_codes)}",
             evidence={"hs_codes": list(all_hs_codes)},
             passed=True,  # Multiple HS codes is not necessarily an error
-        )
+            )
+
+    def _canonical_doc_type(self, doc_type: str | None) -> str | None:
+        """Map compatible document type aliases to a canonical value."""
+        if not doc_type:
+            return None
+        return self.DOC_TYPE_ALIASES.get(doc_type, doc_type)
 
     def _parse_date(self, date_str: str) -> datetime | None:
         """Parse various date formats.

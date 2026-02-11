@@ -34,7 +34,7 @@ def test_casefile_schema_validates_minimal_case():
     schema = load_schema("casefile.json")
 
     minimal_case = {
-        "case_id": "case-abc123def4",
+        "case_id": "case-abc123def456",
         "created_at": "2025-01-15T10:00:00Z",
         "updated_at": "2025-01-15T10:00:00Z",
         "procedure": {},
@@ -80,7 +80,7 @@ def test_casefile_schema_validates_risk_level():
     schema = load_schema("casefile.json")
 
     case = {
-        "case_id": "case-abc123def4",
+        "case_id": "case-abc123def456",
         "created_at": "2025-01-15T10:00:00Z",
         "updated_at": "2025-01-15T10:00:00Z",
         "procedure": {},
@@ -101,7 +101,7 @@ def test_casefile_schema_validates_doc_type_enum():
     schema = load_schema("casefile.json")
 
     case = {
-        "case_id": "case-abc123def4",
+        "case_id": "case-abc123def456",
         "created_at": "2025-01-15T10:00:00Z",
         "updated_at": "2025-01-15T10:00:00Z",
         "procedure": {},
@@ -132,7 +132,7 @@ def test_casefile_schema_validates_risk_score_range():
 
     for score in invalid_scores:
         case = {
-            "case_id": "case-abc123def4",
+            "case_id": "case-abc123def456",
             "created_at": "2025-01-15T10:00:00Z",
             "updated_at": "2025-01-15T10:00:00Z",
             "procedure": {},
